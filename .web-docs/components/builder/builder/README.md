@@ -3,7 +3,7 @@
   builder environment. See https://www.packer.io/docs/builder/null
 -->
 
-The scaffolding builder is used to create endless Packer plugins using
+The harvester builder is used to create endless Packer plugins using
 a consistent plugin structure.
 
 
@@ -11,7 +11,7 @@ a consistent plugin structure.
 
 **Required**
 
-- `mock` (string) - The name of the mock to use for the Scaffolding API.
+- `mock` (string) - The name of the mock to use for the Harvester API.
 
 
 <!--
@@ -24,7 +24,7 @@ a consistent plugin structure.
 
 **Optional**
 
-- `mock_api_url` (string) - The Scaffolding API endpoint to connect to.
+- `mock_api_url` (string) - The Harvester API endpoint to connect to.
   Defaults to https://example.com
 
 
@@ -38,11 +38,11 @@ a consistent plugin structure.
 
 
 ```hcl
- source "scaffolding" "example" {
+ source "harvester" "example" {
    mock = "bird"
  }
 
  build {
-   sources = ["source.scaffolding.example"]
+   sources = ["source.harvester.example"]
  }
 ```

@@ -3,41 +3,41 @@
 
 packer {
   required_plugins {
-    scaffolding = {
+    harvester = {
       version = ">=v0.1.0"
-      source  = "github.com/hashicorp/scaffolding"
+      source  = "github.com/hashicorp/harvester"
     }
   }
 }
 
-source "scaffolding-my-builder" "foo-example" {
+source "harvester-my-builder" "foo-example" {
   mock = local.foo
 }
 
-source "scaffolding-my-builder" "bar-example" {
+source "harvester-my-builder" "bar-example" {
   mock = local.bar
 }
 
 build {
   sources = [
-    "source.scaffolding-my-builder.foo-example",
+    "source.harvester-my-builder.foo-example",
   ]
 
-  source "source.scaffolding-my-builder.bar-example" {
+  source "source.harvester-my-builder.bar-example" {
     name = "bar"
   }
 
-  provisioner "scaffolding-my-provisioner" {
-    only = ["scaffolding-my-builder.foo-example"]
+  provisioner "harvester-my-provisioner" {
+    only = ["harvester-my-builder.foo-example"]
     mock = "foo: ${local.foo}"
   }
 
-  provisioner "scaffolding-my-provisioner" {
-    only = ["scaffolding-my-builder.bar"]
+  provisioner "harvester-my-provisioner" {
+    only = ["harvester-my-builder.bar"]
     mock = "bar: ${local.bar}"
   }
 
-  post-processor "scaffolding-my-post-processor" {
+  post-processor "harvester-my-post-processor" {
     mock = "post-processor mock-config"
   }
 }

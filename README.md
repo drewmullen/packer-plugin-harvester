@@ -1,10 +1,10 @@
-# Packer Plugin Scaffolding
+# Packer Plugin Harvester
 
 This repository is a template for a Packer multi-component plugin. It is intended as a starting point for creating Packer plugins, containing:
-- A builder ([builder/scaffolding](builder/scaffolding))
-- A provisioner ([provisioner/scaffolding](provisioner/scaffolding))
-- A post-processor ([post-processor/scaffolding](post-processor/scaffolding))
-- A data source ([datasource/scaffolding](datasource/scaffolding))
+- A builder ([builder/harvester](builder/harvester))
+- A provisioner ([provisioner/harvester](provisioner/harvester))
+- A post-processor ([post-processor/harvester](post-processor/harvester))
+- A data source ([datasource/harvester](datasource/harvester))
 - Docs ([docs](docs))
 - A working example ([example](example))
 
@@ -35,14 +35,14 @@ Looking at their code will give you good examples.
 
 2. Run this command from the root directory: 
 ```shell 
-go build -ldflags="-X github.com/hashicorp/packer-plugin-scaffolding/version.VersionPrerelease=dev" -o packer-plugin-scaffolding
+go build -ldflags="-X github.com/hashicorp/packer-plugin-harvester/version.VersionPrerelease=dev" -o packer-plugin-harvester
 ```
 
-3. After you successfully compile, the `packer-plugin-scaffolding` plugin binary file is in the root directory. 
+3. After you successfully compile, the `packer-plugin-harvester` plugin binary file is in the root directory. 
 
 4. To install the compiled plugin, run the following command 
 ```shell
-packer plugins install --path packer-plugin-scaffolding github.com/hashicorp/scaffolding
+packer plugins install --path packer-plugin-harvester github.com/hashicorp/harvester
 ```
 
 ### Build on *nix systems
@@ -55,8 +55,8 @@ If you would prefer to script the building process you can use the following as 
 ```powershell
 $MODULE_NAME = (Get-Content go.mod | Where-Object { $_ -match "^module"  }) -replace 'module ',''
 $FQN = $MODULE_NAME -replace 'packer-plugin-',''
-go build -ldflags="-X $MODULE_NAME/version.VersionPrerelease=dev" -o packer-plugin-scaffolding.exe
-packer plugins install --path packer-plugin-scaffolding.exe $FQN
+go build -ldflags="-X $MODULE_NAME/version.VersionPrerelease=dev" -o packer-plugin-harvester.exe
+packer plugins install --path packer-plugin-harvester.exe $FQN
 ```
 
 ## Running Acceptance Tests
@@ -87,4 +87,4 @@ plugin as a Packer integration refer to the [Developing Plugins](https://develop
 -	[Go](https://golang.org/doc/install) >= 1.20
 
 ## Packer Compatibility
-This scaffolding template is compatible with Packer >= v1.10.2
+This harvester template is compatible with Packer >= v1.10.2

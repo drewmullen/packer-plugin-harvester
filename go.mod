@@ -1,4 +1,4 @@
-module github.com/hashicorp/packer-plugin-scaffolding
+module github.com/hashicorp/packer-plugin-harvester
 
 go 1.20
 

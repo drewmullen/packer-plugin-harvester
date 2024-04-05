@@ -3,7 +3,7 @@
   be helpful to a user. See https://www.packer.io/docs/provisioner/null
 -->
 
-The scaffolding provisioner is used to provisioner Packer builds.
+The harvester provisioner is used to provisioner Packer builds.
 
 
 <!-- Provisioner Configuration Fields -->
@@ -42,7 +42,7 @@ The scaffolding provisioner is used to provisioner Packer builds.
      name = "jay"
    }
 
-   provisioner "scaffolding" {
+   provisioner "harvester" {
      mock = "mocking ${source.name}"
    }
  }

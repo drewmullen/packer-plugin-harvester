@@ -3,7 +3,7 @@
   data source environment. See https://www.packer.io/docs/data-source/amazon-ami
 -->
 
-The scaffolding data source is used to create endless Packer plugins using
+The harvester data source is used to create endless Packer plugins using
 a consistent plugin structure.
 
 
@@ -11,7 +11,7 @@ a consistent plugin structure.
 
 **Required**
 
-- `mock` (string) - The name of the mock to use for the Scaffolding API.
+- `mock` (string) - The name of the mock to use for the Harvester API.
 
 
 <!--
@@ -24,7 +24,7 @@ a consistent plugin structure.
 
 **Optional**
 
-- `mock_api_url` (string) - The Scaffolding API endpoint to connect to.
+- `mock_api_url` (string) - The Harvester API endpoint to connect to.
   Defaults to https://example.com
 
 
@@ -37,8 +37,8 @@ a consistent plugin structure.
 
 ### OutPut
 
-- `foo` (string) - The Scaffolding output foo value.
-- `bar` (string) - The Scaffolding output bar value.
+- `foo` (string) - The Harvester output foo value.
+- `bar` (string) - The Harvester output bar value.
 
 <!--
   A basic example on the usage of the data source. Multiple examples
@@ -50,14 +50,14 @@ a consistent plugin structure.
 
 
 ```hcl
-data "scaffolding" "example" {
+data "harvester" "example" {
    mock = "bird"
  }
- source "scaffolding" "example" {
-   mock = data.scaffolding.example.foo
+ source "harvester" "example" {
+   mock = data.harvester.example.foo
  }
 
  build {
-   sources = ["source.scaffolding.example"]
+   sources = ["source.harvester.example"]
  }
 ```

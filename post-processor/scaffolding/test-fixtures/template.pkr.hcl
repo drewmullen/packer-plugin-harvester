@@ -10,7 +10,7 @@ build {
     "source.null.basic-example"
   ]
 
-  post-processor "scaffolding-my-post-processor" {
+  post-processor "harvester-my-post-processor" {
     mock = "my-mock-config"
   }
 }

@@ -3,7 +3,7 @@
   be helpful to a user. See https://www.packer.io/docs/provisioner/null
 -->
 
-The scaffolding post-processor is used to export Packer Scaffolding builds.
+The harvester post-processor is used to export Packer Harvester builds.
 
 
 <!-- Post-Processor Configuration Fields -->
@@ -32,15 +32,15 @@ The scaffolding post-processor is used to export Packer Scaffolding builds.
 
 
 ```hcl
- source "scaffolding" "example" {
+ source "harvester" "example" {
    mock = "jay"
  }
 
  build {
-   sources = ["source.scaffolding.example"]
+   sources = ["source.harvester.example"]
 
-   post-processor "scaffolding" {
-     mock = "builds/scaffolding.box"
+   post-processor "harvester" {
+     mock = "builds/harvester.box"
    }
  }
 ```

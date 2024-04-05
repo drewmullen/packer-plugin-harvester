@@ -1,4 +1,4 @@
-NAME=scaffolding
+NAME=harvester
 BINARY=packer-plugin-${NAME}
 
 COUNT?=1
