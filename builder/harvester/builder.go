@@ -7,6 +7,7 @@ package harvester
 
 import (
 	"context"
+	"os"
 
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/hashicorp/packer-plugin-sdk/common"
@@ -14,6 +15,8 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/multistep/commonsteps"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/template/config"
+
+	harvester "github.com/drewmullen/harvester-go-sdk"
 )
 
 const BuilderId = "harvester.builder"
@@ -21,6 +24,9 @@ const BuilderId = "harvester.builder"
 type Config struct {
 	common.PackerConfig `mapstructure:",squash"`
 	MockOption          string `mapstructure:"mock"`
+	RancherURL          string `mapstructure:"rancher_url"`
+	RancherToken        string `mapstructure:"rancher_token"`
+	RancherNamespace    string `mapstructure:"rancher_namespace"`
 }
 
 type Builder struct {
@@ -38,26 +44,51 @@ func (b *Builder) Prepare(raws ...interface{}) (generatedVars []string, warnings
 	if err != nil {
 		return nil, nil, err
 	}
+
+	if b.config.RancherURL == "" {
+		b.config.RancherURL = os.Getenv("RANCHER_URL")
+	}
+	if b.config.RancherToken == "" {
+		b.config.RancherToken = os.Getenv("RANCHER_TOKEN")
+	}
+	if b.config.RancherNamespace == "" {
+		b.config.RancherNamespace = os.Getenv("RANCHER_NAMESPACE")
+	}
+
 	// Return the placeholder for the generated data that will become available to provisioners and post-processors.
 	// If the builder doesn't generate any data, just return an empty slice of string: []string{}
-	buildGeneratedData := []string{"GeneratedMockData"}
-	return buildGeneratedData, nil, nil
+	// buildGeneratedData := []string{"GeneratedMockData"}
+	return []string{}, nil, nil
 }
 
 func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (packer.Artifact, error) {
 	steps := []multistep.Step{}
 
-	steps = append(steps,
-		&StepSayConfig{
-			MockConfig: b.config.MockOption,
+	configuration := &harvester.Configuration{
+		DefaultHeader: make(map[string]string),
+		UserAgent:     "OpenAPI-Generator/1.0.0/go",
+		Debug:         false,
+		Servers: harvester.ServerConfigurations{
+			{
+				URL:         b.config.RancherURL,
+				Description: "Harvester API Server",
+			},
 		},
-		new(commonsteps.StepProvision),
-	)
+	}
+	auth := context.WithValue(context.Background(), harvester.ContextAccessToken, b.config.RancherToken)
+	client := harvester.NewAPIClient(configuration)
 
 	// Setup the state bag and initial state for the steps
 	state := new(multistep.BasicStateBag)
 	state.Put("hook", hook)
 	state.Put("ui", ui)
+	state.Put("client", client)
+	state.Put("auth", auth)
+
+	steps = append(steps,
+		&StepCreateVM{},
+		// new(commonsteps.StepProvision),
+	)
 
 	// Set the value of the generated data that will become available to provisioners.
 	// To share the data with post-processors, use the StateData in the artifact.
