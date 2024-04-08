@@ -3,7 +3,7 @@
 
 //go:generate packer-sdc mapstructure-to-hcl2 -type Config
 
-package harvester
+package img
 
 import (
 	"context"
@@ -23,10 +23,9 @@ const BuilderId = "harvester.builder"
 
 type Config struct {
 	common.PackerConfig `mapstructure:",squash"`
-	MockOption          string `mapstructure:"mock"`
-	RancherURL          string `mapstructure:"rancher_url"`
-	RancherToken        string `mapstructure:"rancher_token"`
-	RancherNamespace    string `mapstructure:"rancher_namespace"`
+	HarvesterURL        string `mapstructure:"harvester_url"`
+	HarvesterToken      string `mapstructure:"harvester_token"`
+	HarvesterNamespace  string `mapstructure:"harvester_namespace"`
 }
 
 type Builder struct {
@@ -45,14 +44,14 @@ func (b *Builder) Prepare(raws ...interface{}) (generatedVars []string, warnings
 		return nil, nil, err
 	}
 
-	if b.config.RancherURL == "" {
-		b.config.RancherURL = os.Getenv("RANCHER_URL")
+	if b.config.HarvesterURL == "" {
+		b.config.HarvesterURL = os.Getenv("HARVESTER_URL")
 	}
-	if b.config.RancherToken == "" {
-		b.config.RancherToken = os.Getenv("RANCHER_TOKEN")
+	if b.config.HarvesterToken == "" {
+		b.config.HarvesterToken = os.Getenv("HARVESTER_TOKEN")
 	}
-	if b.config.RancherNamespace == "" {
-		b.config.RancherNamespace = os.Getenv("RANCHER_NAMESPACE")
+	if b.config.HarvesterNamespace == "" {
+		b.config.HarvesterNamespace = os.Getenv("HARVESTER_NAMESPACE")
 	}
 
 	// Return the placeholder for the generated data that will become available to provisioners and post-processors.
@@ -70,18 +69,19 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 		Debug:         false,
 		Servers: harvester.ServerConfigurations{
 			{
-				URL:         b.config.RancherURL,
+				URL:         b.config.HarvesterURL,
 				Description: "Harvester API Server",
 			},
 		},
 	}
-	auth := context.WithValue(context.Background(), harvester.ContextAccessToken, b.config.RancherToken)
+	auth := context.WithValue(context.Background(), harvester.ContextAccessToken, b.config.HarvesterToken)
 	client := harvester.NewAPIClient(configuration)
 
 	// Setup the state bag and initial state for the steps
 	state := new(multistep.BasicStateBag)
 	state.Put("hook", hook)
 	state.Put("ui", ui)
+	state.Put("config", &b.config)
 	state.Put("client", client)
 	state.Put("auth", auth)
 

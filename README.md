@@ -35,14 +35,14 @@ Looking at their code will give you good examples.
 
 2. Run this command from the root directory: 
 ```shell 
-go build -ldflags="-X github.com/hashicorp/packer-plugin-harvester/version.VersionPrerelease=dev" -o packer-plugin-harvester
+go build -ldflags="-X github.com/rptcloud/packer-plugin-harvester/version.VersionPrerelease=dev" -o packer-plugin-harvester
 ```
 
 3. After you successfully compile, the `packer-plugin-harvester` plugin binary file is in the root directory. 
 
 4. To install the compiled plugin, run the following command 
 ```shell
-packer plugins install --path packer-plugin-harvester github.com/hashicorp/harvester
+packer plugins install --path packer-plugin-harvester github.com/rptcloud/harvester
 ```
 
 ### Build on *nix systems

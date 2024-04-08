@@ -5,7 +5,7 @@ packer {
   required_plugins {
     harvester = {
       version = ">=v0.1.0"
-      source  = "github.com/hashicorp/harvester"
+      source  = "github.com/rptcloud/harvester"
     }
   }
 }

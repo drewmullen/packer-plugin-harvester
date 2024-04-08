@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package harvester
+package img
 
 import (
 	"context"
@@ -32,7 +32,7 @@ func (s *StepCreateVM) Run(_ context.Context, state multistep.StateBag) multiste
 	vmObj := &harvester.KubevirtIoApiCoreV1VirtualMachine{}
 	json.Unmarshal(vmBody, vmObj)
 
-	req := client.VirtualMachinesAPI.CreateNamespacedVirtualMachine(auth, c.RancherNamespace)
+	req := client.VirtualMachinesAPI.CreateNamespacedVirtualMachine(auth, c.HarvesterNamespace)
 
 	req = req.KubevirtIoApiCoreV1VirtualMachine(*vmObj)
 	vm, _, err := client.VirtualMachinesAPI.CreateNamespacedVirtualMachineExecute(req)
@@ -41,6 +41,7 @@ func (s *StepCreateVM) Run(_ context.Context, state multistep.StateBag) multiste
 		ui.Error(fmt.Sprintf("Error creating VM: %v", err))
 	}
 
+	// could use generateName
 	if vm.Metadata.Name == nil {
 		ui.Error("VM name is nil")
 	}
