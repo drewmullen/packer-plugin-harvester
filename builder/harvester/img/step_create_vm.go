@@ -6,7 +6,9 @@ package img
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"time"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
@@ -44,10 +46,26 @@ func (s *StepCreateVM) Run(_ context.Context, state multistep.StateBag) multiste
 	// could use generateName
 	if vm.Metadata.Name == nil {
 		ui.Error("VM name is nil")
+		return multistep.ActionHalt
 	}
-	s.Name = *vm.Metadata.Name
+	name := *vm.Metadata.Name
+	state.Put("Name", *vm.Metadata.Name)
 
-	ui.Say(fmt.Sprintf("The vm name is %v", s.Name))
+	ui.Say(fmt.Sprintf("The vm name is %v", name))
+	ui.Say(fmt.Sprintf("Waiting for VM, %v, to report as \"Running\"", name))
+
+	timeout := 2 * time.Minute
+	desiredState := "Running"
+	time.Sleep(3 * time.Second)
+	err = waitForVMState(desiredState, name, c.HarvesterNamespace, *client, auth, timeout)
+
+	if err != nil {
+		err := fmt.Errorf("error waiting for vm, %v, to become %v: %s", name, desiredState, err)
+		state.Put("error", err)
+		ui.Error(err.Error())
+		return multistep.ActionHalt
+	}
+
 	// Determines that should continue to the next step
 	return multistep.ActionContinue
 }
@@ -56,6 +74,32 @@ func (s *StepCreateVM) Run(_ context.Context, state multistep.StateBag) multiste
 // A step's clean up always run at the end of a build, regardless of whether provisioning succeeds or fails.
 func (s *StepCreateVM) Cleanup(_ multistep.StateBag) {
 	// Nothing to clean
+}
+
+func waitForVMState(desiredState string, name string, namespace string, client harvester.APIClient, auth context.Context, timeout time.Duration) error {
+
+	startTime := time.Now()
+
+	for {
+		readReq := client.VirtualMachinesAPI.ReadNamespacedVirtualMachineInstance(auth, name, namespace)
+		currentState, _, err := readReq.Execute()
+		// currentState, _, err := client.VirtualMachinesAPI.ReadNamespacedVirtualMachineInstance(auth, name, namespace).Execute()
+		if err != nil {
+			return err
+		}
+
+		if *currentState.Status.Phase == desiredState {
+			fmt.Printf("Desired state %s reached!\n", desiredState)
+			return nil
+		}
+
+		if time.Since(startTime) >= timeout {
+			return errors.New("timeout waiting for desired state")
+		}
+
+		fmt.Printf("Current state is %v. Waiting...\n", currentState)
+		time.Sleep(5 * time.Second) // Adjust the polling interval as needed
+	}
 }
 
 var vmStr string = `{

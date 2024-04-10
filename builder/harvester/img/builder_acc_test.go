@@ -29,7 +29,7 @@ func TestAccHarvesterBuilder(t *testing.T) {
 			return nil
 		},
 		Template: testBuilderHCL2Basic,
-		Type:     "harvester-my-builder",
+		Type:     "harvester-img",
 		Check: func(buildCommand *exec.Cmd, logfile string) error {
 			if buildCommand.ProcessState != nil {
 				if buildCommand.ProcessState.ExitCode() != 0 {
@@ -49,7 +49,7 @@ func TestAccHarvesterBuilder(t *testing.T) {
 			}
 			logsString := string(logsBytes)
 
-			buildGeneratedDataLog := "harvester-my-builder.basic-example: build generated data: mock-build-data"
+			buildGeneratedDataLog := "harvester-img.basic-example: build generated data: mock-build-data"
 			if matched, _ := regexp.MatchString(buildGeneratedDataLog+".*", logsString); !matched {
 				t.Fatalf("logs doesn't contain expected foo value %q", logsString)
 			}
