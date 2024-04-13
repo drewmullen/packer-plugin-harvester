@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:generate packer-sdc mapstructure-to-hcl2 -type Config
+//go:generate packer-sdc mapstructure-to-hcl2 -type Config,BuildSource
 
 package img
 
@@ -22,10 +22,31 @@ import (
 const BuilderId = "harvester.builder"
 
 type Config struct {
+	// required:"false"`
 	common.PackerConfig `mapstructure:",squash"`
 	HarvesterURL        string `mapstructure:"harvester_url"`
 	HarvesterToken      string `mapstructure:"harvester_token"`
 	HarvesterNamespace  string `mapstructure:"harvester_namespace"`
+
+	// SourceDownloadURL      string `mapstructure:"source_download_url"`
+	// SourceImageName        string `mapstructure:"source_image_name"`
+	// SourceImageDisplayName string `mapstructure:"source_image_display_name" required:"false"`
+	// OSType                 string `mapstructure:"os_type"`
+
+	BuildSource BuildSource `mapstructure:"build_source"`
+	// TargetImageName        string `mapstructure:"target_image_name"`
+	// TargetImageDisplayName string `mapstructure:"target_image_display_name" required:"false"`
+}
+
+type BuildSource struct {
+	Name      string `mapstructure:"name"`
+	OSType    string `mapstructure:"os_type"`
+	ImageType string `mapstructure:"image_type"`
+
+	URL         string `mapstructure:"url" required:"false"`
+	DisplayName string `mapstructure:"display_name" required:"false"`
+	Checksum    string `mapstructure:"checksum" required:"false"`
+	Cleanup     bool   `mapstructure:"cleanup" required:"false"`
 }
 
 type Builder struct {
@@ -86,7 +107,9 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 	state.Put("auth", auth)
 
 	steps = append(steps,
+		&StepSourceBase{},
 		&StepCreateVM{},
+		// &StepExportVMImage{},
 		&StepTerminateVM{},
 		// new(commonsteps.StepProvision),
 	)

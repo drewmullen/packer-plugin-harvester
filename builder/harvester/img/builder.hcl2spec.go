@@ -7,6 +7,41 @@ import (
 	"github.com/zclconf/go-cty/cty"
 )
 
+// FlatBuildSource is an auto-generated flat version of BuildSource.
+// Where the contents of a field with a `mapstructure:,squash` tag are bubbled up.
+type FlatBuildSource struct {
+	Name        *string `mapstructure:"name" cty:"name" hcl:"name"`
+	OSType      *string `mapstructure:"os_type" cty:"os_type" hcl:"os_type"`
+	ImageType   *string `mapstructure:"image_type" cty:"image_type" hcl:"image_type"`
+	URL         *string `mapstructure:"url" required:"false" cty:"url" hcl:"url"`
+	DisplayName *string `mapstructure:"display_name" required:"false" cty:"display_name" hcl:"display_name"`
+	Checksum    *string `mapstructure:"checksum" required:"false" cty:"checksum" hcl:"checksum"`
+	Cleanup     *bool   `mapstructure:"cleanup" required:"false" cty:"cleanup" hcl:"cleanup"`
+}
+
+// FlatMapstructure returns a new FlatBuildSource.
+// FlatBuildSource is an auto-generated flat version of BuildSource.
+// Where the contents a fields with a `mapstructure:,squash` tag are bubbled up.
+func (*BuildSource) FlatMapstructure() interface{ HCL2Spec() map[string]hcldec.Spec } {
+	return new(FlatBuildSource)
+}
+
+// HCL2Spec returns the hcl spec of a BuildSource.
+// This spec is used by HCL to read the fields of BuildSource.
+// The decoded values from this spec will then be applied to a FlatBuildSource.
+func (*FlatBuildSource) HCL2Spec() map[string]hcldec.Spec {
+	s := map[string]hcldec.Spec{
+		"name":         &hcldec.AttrSpec{Name: "name", Type: cty.String, Required: false},
+		"os_type":      &hcldec.AttrSpec{Name: "os_type", Type: cty.String, Required: false},
+		"image_type":   &hcldec.AttrSpec{Name: "image_type", Type: cty.String, Required: false},
+		"url":          &hcldec.AttrSpec{Name: "url", Type: cty.String, Required: false},
+		"display_name": &hcldec.AttrSpec{Name: "display_name", Type: cty.String, Required: false},
+		"checksum":     &hcldec.AttrSpec{Name: "checksum", Type: cty.String, Required: false},
+		"cleanup":      &hcldec.AttrSpec{Name: "cleanup", Type: cty.Bool, Required: false},
+	}
+	return s
+}
+
 // FlatConfig is an auto-generated flat version of Config.
 // Where the contents of a field with a `mapstructure:,squash` tag are bubbled up.
 type FlatConfig struct {
@@ -21,6 +56,7 @@ type FlatConfig struct {
 	HarvesterURL        *string           `mapstructure:"harvester_url" cty:"harvester_url" hcl:"harvester_url"`
 	HarvesterToken      *string           `mapstructure:"harvester_token" cty:"harvester_token" hcl:"harvester_token"`
 	HarvesterNamespace  *string           `mapstructure:"harvester_namespace" cty:"harvester_namespace" hcl:"harvester_namespace"`
+	BuildSource         *FlatBuildSource  `mapstructure:"build_source" cty:"build_source" hcl:"build_source"`
 }
 
 // FlatMapstructure returns a new FlatConfig.
@@ -46,6 +82,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"harvester_url":              &hcldec.AttrSpec{Name: "harvester_url", Type: cty.String, Required: false},
 		"harvester_token":            &hcldec.AttrSpec{Name: "harvester_token", Type: cty.String, Required: false},
 		"harvester_namespace":        &hcldec.AttrSpec{Name: "harvester_namespace", Type: cty.String, Required: false},
+		"build_source":               &hcldec.BlockSpec{TypeName: "build_source", Nested: hcldec.ObjectSpec((*FlatBuildSource)(nil).HCL2Spec())},
 	}
 	return s
 }

@@ -51,13 +51,13 @@ func (s *StepCreateVM) Run(_ context.Context, state multistep.StateBag) multiste
 	name := *vm.Metadata.Name
 	state.Put("Name", *vm.Metadata.Name)
 
-	ui.Say(fmt.Sprintf("The vm name is %v", name))
+	ui.Say(fmt.Sprintf("Creating builder VM. Name is %v", name))
 	ui.Say(fmt.Sprintf("Waiting for VM, %v, to report as \"Running\"", name))
 
 	timeout := 2 * time.Minute
 	desiredState := "Running"
 	time.Sleep(3 * time.Second)
-	err = waitForVMState(desiredState, name, c.HarvesterNamespace, *client, auth, timeout)
+	err = waitForVMState(desiredState, name, c.HarvesterNamespace, *client, auth, timeout, ui)
 
 	if err != nil {
 		err := fmt.Errorf("error waiting for vm, %v, to become %v: %s", name, desiredState, err)
@@ -65,6 +65,8 @@ func (s *StepCreateVM) Run(_ context.Context, state multistep.StateBag) multiste
 		ui.Error(err.Error())
 		return multistep.ActionHalt
 	}
+
+	ui.Say("VM created and ready for use")
 
 	// Determines that should continue to the next step
 	return multistep.ActionContinue
@@ -76,20 +78,17 @@ func (s *StepCreateVM) Cleanup(_ multistep.StateBag) {
 	// Nothing to clean
 }
 
-func waitForVMState(desiredState string, name string, namespace string, client harvester.APIClient, auth context.Context, timeout time.Duration) error {
-
+func waitForVMState(desiredState string, name string, namespace string, client harvester.APIClient, auth context.Context, timeout time.Duration, ui packersdk.Ui) error {
 	startTime := time.Now()
 
 	for {
 		readReq := client.VirtualMachinesAPI.ReadNamespacedVirtualMachineInstance(auth, name, namespace)
 		currentState, _, err := readReq.Execute()
-		// currentState, _, err := client.VirtualMachinesAPI.ReadNamespacedVirtualMachineInstance(auth, name, namespace).Execute()
 		if err != nil {
 			return err
 		}
 
 		if *currentState.Status.Phase == desiredState {
-			fmt.Printf("Desired state %s reached!\n", desiredState)
 			return nil
 		}
 
@@ -97,7 +96,7 @@ func waitForVMState(desiredState string, name string, namespace string, client h
 			return errors.New("timeout waiting for desired state")
 		}
 
-		fmt.Printf("Current state is %v. Waiting...\n", currentState)
+		ui.Say("Waiting for VM to be ready...")
 		time.Sleep(5 * time.Second) // Adjust the polling interval as needed
 	}
 }
@@ -111,7 +110,7 @@ var vmStr string = `{
 			"kubevirt.io/latest-observed-api-version": "v1",
 			"kubevirt.io/storage-observed-api-version": "v1alpha3",
 			"network.harvesterhci.io/ips": "[]",
-			"harvesterhci.io/volumeClaimTemplates": "[{\"metadata\":{\"name\":\"packer-build\",\"creationTimestamp\":null,\"annotations\":{\"harvesterhci.io/imageId\":\"harvester-public/ubuntu-22\",\"terraform-provider-harvester-auto-delete\":\"true\"}},\"spec\":{\"accessModes\":[\"ReadWriteMany\"],\"resources\":{\"requests\":{\"storage\":\"100Gi\"}},\"storageClassName\":\"longhorn-ubuntu-22\",\"volumeMode\":\"Block\"},\"status\":{}}]"
+			"harvesterhci.io/volumeClaimTemplates": "[{\"metadata\":{\"name\":\"packer-build\",\"creationTimestamp\":null,\"annotations\":{\"harvesterhci.io/imageId\":\"drew/drewbuntu\",\"terraform-provider-harvester-auto-delete\":\"true\"}},\"spec\":{\"accessModes\":[\"ReadWriteMany\"],\"resources\":{\"requests\":{\"storage\":\"100Gi\"}},\"storageClassName\":\"longhorn-ubuntu-22\",\"volumeMode\":\"Block\"},\"status\":{}}]"
 		},
 		"labels": {
 			"harvesterhci.io/creator": "harvester",
