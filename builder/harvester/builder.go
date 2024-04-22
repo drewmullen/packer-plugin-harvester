@@ -1,9 +1,9 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:generate packer-sdc mapstructure-to-hcl2 -type Config,BuildSource,BuildTarget
+//go:generate packer-sdc mapstructure-to-hcl2 -type Config,BuilderSource,BuilderConfiguration,BuilderTarget
 
-package img
+package harvester
 
 import (
 	"context"
@@ -22,17 +22,17 @@ import (
 const BuilderId = "harvester.builder"
 
 type Config struct {
-	// required:"false"`
 	common.PackerConfig `mapstructure:",squash"`
 	HarvesterURL        string `mapstructure:"harvester_url"`
 	HarvesterToken      string `mapstructure:"harvester_token"`
 	HarvesterNamespace  string `mapstructure:"harvester_namespace"`
 
-	BuildSource BuildSource `mapstructure:"build_source"`
-	BuildTarget BuildTarget `mapstructure:"build_target"`
+	BuilderSource        BuilderSource        `mapstructure:"builder_source"`
+	BuilderConfiguration BuilderConfiguration `mapstructure:"builder_configuration"`
+	BuilderTarget        BuilderTarget        `mapstructure:"builder_target"`
 }
 
-type BuildSource struct {
+type BuilderSource struct {
 	Name      string `mapstructure:"name"`
 	OSType    string `mapstructure:"os_type"`
 	ImageType string `mapstructure:"image_type"`
@@ -43,9 +43,22 @@ type BuildSource struct {
 	Cleanup     bool   `mapstructure:"cleanup" required:"false"`
 }
 
-type BuildTarget struct {
+type BuilderConfiguration struct {
+	// default to HarvesterNamespace
+	Namespace string `mapstructure:"namespace" required:"false"`
+	// default to "packer-"
+	NamePrefix string `mapstructure:"name_prefix" required:"false"`
+	// default 1
+	CPU int64 `mapstructure:"cpu" required:"false"`
+	// default 2Gi
+	Memory string `mapstructure:"memory" required:"false"`
+	// PreventBuilderImageCleanup bool `mapstructure:"prevent_builder_image_cleanup" required:"false"`
+}
+
+type BuilderTarget struct {
+	// default to HarvesterNamespace
 	Namespace        string `mapstructure:"namespace" required:"false"`
-	DisplayName      string `mapstructure:"display_name"`
+	DisplayName      string `mapstructure:"display_name" required:"false"`
 	StorageClassName string `mapstructure:"storage_class_name" required:"false"`
 }
 
@@ -108,6 +121,7 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 
 	steps = append(steps,
 		&StepSourceBase{},
+		&StepCreateVolume{},
 		&StepCreateVM{},
 		// TODO: on hold, cannot track status of exported VM
 		// &StepExportVMImage{},

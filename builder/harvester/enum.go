@@ -1,4 +1,4 @@
-package img
+package harvester
 
 var (
 	ApiVersionHarvesterKey string = "harvesterhci.io/v1beta1"

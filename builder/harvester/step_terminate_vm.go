@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package img
+package harvester
 
 import (
 	"context"
@@ -33,11 +33,11 @@ func (s *StepTerminateVM) Run(_ context.Context, state multistep.StateBag) multi
 	name := state.Get("Name").(string)
 	delReq := client.VirtualMachinesAPI.DeleteNamespacedVirtualMachine(auth, name, c.HarvesterNamespace)
 	delReq = delReq.K8sIoV1DeleteOptions(harvester.K8sIoV1DeleteOptions{})
+
 	_, _, err := client.VirtualMachinesAPI.DeleteNamespacedVirtualMachineExecute(delReq)
 
 	if err != nil {
 		ui.Error(fmt.Sprintf("Error deleting VM: %v", err))
-		// ui.Error(fmt.Sprintf("Response: %v", delResp))
 	}
 
 	ui.Say(fmt.Sprintf("The VM, %v, has been terminated", name))

@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package img
+package harvester
 
 import (
 	"context"
@@ -28,10 +28,28 @@ func (s *StepCreateVM) Run(_ context.Context, state multistep.StateBag) multiste
 	ui := state.Get("ui").(packersdk.Ui)
 	c := state.Get("config").(*Config)
 
-	// temp for hardcoded payload
-	// vmBody := []byte(vmStr)
-	// vmObj := &harvester.KubevirtIoApiCoreV1VirtualMachine{}
-	// json.Unmarshal(vmBody, vmObj)
+	// Prepare values for temporary build VM
+	if c.BuilderConfiguration.Namespace == "" {
+		vmObject.Metadata.Namespace = toStringPtr(c.HarvesterNamespace)
+	} else {
+		vmObject.Metadata.Namespace = toStringPtr(c.BuilderConfiguration.Namespace)
+	}
+
+	if c.BuilderConfiguration.NamePrefix == "" {
+		vmObject.Metadata.GenerateName = toStringPtr("packer-")
+	} else {
+		vmObject.Metadata.GenerateName = &c.BuilderConfiguration.NamePrefix
+	}
+
+	if c.BuilderConfiguration.CPU != 0 {
+		vmObject.Spec.Template.Spec.Domain.Cpu.Cores = &c.BuilderConfiguration.CPU
+	}
+
+	if c.BuilderConfiguration.Memory == "" {
+		vmObject.Spec.Template.Spec.Domain.Resources.Requests["memory"] = "2Gi"
+	} else {
+		vmObject.Spec.Template.Spec.Domain.Resources.Requests["memory"] = c.BuilderConfiguration.Memory
+	}
 
 	req := client.VirtualMachinesAPI.CreateNamespacedVirtualMachine(auth, c.HarvesterNamespace)
 
@@ -119,8 +137,6 @@ var vmObject = &harvester.KubevirtIoApiCoreV1VirtualMachine{
 			"harvesterhci.io/vmName":       "runner",
 			"tag.harvesterhci.io/ssh-user": "ubuntu",
 		},
-		Name:      toStringPtr("test-4"),
-		Namespace: toStringPtr("drew"),
 	},
 	Spec: harvester.KubevirtIoApiCoreV1VirtualMachineSpec{
 		RunStrategy: &VirtualMachineSpecRunStrategy,
@@ -216,18 +232,8 @@ var vmObject = &harvester.KubevirtIoApiCoreV1VirtualMachine{
 					Machine: &harvester.KubevirtIoApiCoreV1Machine{
 						Type: toStringPtr("q35"),
 					},
-					Memory: &harvester.KubevirtIoApiCoreV1Memory{
-						Guest: toStringPtr("1024Mi"),
-					},
 					Resources: &harvester.KubevirtIoApiCoreV1ResourceRequirements{
-						Limits: map[string]string{
-							"cpu":    "1",
-							"memory": "2Gi",
-						},
-						Requests: map[string]string{
-							"cpu":    "1",
-							"memory": "2Gi",
-						},
+						Requests: map[string]string{},
 					},
 				},
 				EvictionStrategy: toStringPtr("LiveMigrate"),
@@ -281,168 +287,168 @@ func toInt32Ptr(i int32) *int32 {
 	return &i
 }
 
-var vmStr string = `{
-	"apiVersion": "kubevirt.io/v1",
-	"kind": "VirtualMachine",
-	"metadata": {
-		"annotations": {
-			"harvesterhci.io/vmRunStrategy": "RerunOnFailure",
-			"kubevirt.io/latest-observed-api-version": "v1",
-			"kubevirt.io/storage-observed-api-version": "v1alpha3",
-			"network.harvesterhci.io/ips": "[]",
-			"harvesterhci.io/volumeClaimTemplates": "[{\"metadata\":{\"name\":\"packer-build\",\"creationTimestamp\":null,\"annotations\":{\"harvesterhci.io/imageId\":\"drew/drewbuntu\",\"terraform-provider-harvester-auto-delete\":\"true\"}},\"spec\":{\"accessModes\":[\"ReadWriteMany\"],\"resources\":{\"requests\":{\"storage\":\"100Gi\"}},\"storageClassName\":\"longhorn-ubuntu-22\",\"volumeMode\":\"Block\"},\"status\":{}}]"
-		},
-		"labels": {
-			"harvesterhci.io/creator": "harvester",
-			"harvesterhci.io/os": "linux",
-			"harvesterhci.io/vmName": "runner",
-			"tag.harvesterhci.io/ssh-user": "ubuntu"
-		},
-		"name": "test-4",
-		"namespace": "drew"
-	},
-	"spec": {
-		"runStrategy": "RerunOnFailure",
-		"template": {
-			"metadata": {
-				"annotations": {
-					"harvesterhci.io/waitForLeaseInterfaceNames": "[\"nic-1\"]"
-				},
-				"labels": {
-					"harvesterhci.io/creator": "terraform-provider-harvester",
-					"harvesterhci.io/vmName": "test",
-					"tag.harvesterhci.io/ssh-user": "ubuntu"
-				}
-			},
-			"spec": {
-				"affinity": {
-					"nodeAffinity": {
-						"requiredDuringSchedulingIgnoredDuringExecution": {
-							"nodeSelectorTerms": [
-								{
-									"matchExpressions": [
-										{
-											"key": "network.harvesterhci.io/mgmt",
-											"operator": "In",
-											"values": [
-												"true"
-											]
-										}
-									]
-								}
-							]
-						}
-					},
-					"podAntiAffinity": {
-						"preferredDuringSchedulingIgnoredDuringExecution": [
-							{
-								"podAffinityTerm": {
-									"labelSelector": {
-										"matchExpressions": [
-											{
-												"key": "harvesterhci.io/creator",
-												"operator": "Exists"
-											}
-										]
-									},
-									"topologyKey": "kubernetes.io/hostname"
-								},
-								"weight": 100
-							}
-						]
-					}
-				},
-				"domain": {
-					"cpu": {
-						"cores": 1
-					},
-					"devices": {
-						"disks": [
-							{
-								"bootOrder": 1,
-								"disk": {
-									"bus": "virtio"
-								},
-								"name": "rootdisk"
-							},
-							{
-								"disk": {
-									"bus": "virtio"
-								},
-								"name": "cloudinitdisk"
-							}
-						],
-						"interfaces": [
-							{
-								"bridge": {},
-								"macAddress": "1e:31:ed:d3:83:9c",
-								"model": "virtio",
-								"name": "nic-1"
-							}
-						]
-					},
-					"features": {
-						"acpi": {},
-						"smm": {
-							"enabled": true
-						}
-					},
-					"firmware": {
-						"bootloader": {
-							"efi": {
-								"secureBoot": true
-							}
-						}
-					},
-					"machine": {
-						"type": "q35"
-					},
-					"memory": {
-						"guest": "1024Mi"
-					},
-					"resources": {
-						"limits": {
-							"cpu": "1",
-							"memory": "2Gi"
-						},
-						"requests": {
-							"cpu": "1",
-							"memory": "2Gi"
-						}
-					}
-				},
-				"evictionStrategy": "LiveMigrate",
-				"hostname": "test",
-				"networks": [
-					{
-						"multus": {
-							"networkName": "harvester-public/lab"
-						},
-						"name": "nic-1"
-					}
-				],
-				"terminationGracePeriodSeconds": 120,
-				"volumes": [
-					{
-						"name": "rootdisk",
-						"persistentVolumeClaim": {
-							"claimName": "packer-build"
-						}
-					},
-					{
-						"cloudInitNoCloud": {
-							"networkDataSecretRef": {
-								"name": "packer"
-							},
-							"secretRef": {
-								"name": "packer"
-							}
-						},
-						"name": "cloudinitdisk"
-					}
-				]
-			}
-		}
-	}
- }
- `
+// var vmStr string = `{
+// 	"apiVersion": "kubevirt.io/v1",
+// 	"kind": "VirtualMachine",
+// 	"metadata": {
+// 		"annotations": {
+// 			"harvesterhci.io/vmRunStrategy": "RerunOnFailure",
+// 			"kubevirt.io/latest-observed-api-version": "v1",
+// 			"kubevirt.io/storage-observed-api-version": "v1alpha3",
+// 			"network.harvesterhci.io/ips": "[]",
+// 			"harvesterhci.io/volumeClaimTemplates": "[{\"metadata\":{\"name\":\"packer-build\",\"creationTimestamp\":null,\"annotations\":{\"harvesterhci.io/imageId\":\"drew/drewbuntu\",\"terraform-provider-harvester-auto-delete\":\"true\"}},\"spec\":{\"accessModes\":[\"ReadWriteMany\"],\"resources\":{\"requests\":{\"storage\":\"100Gi\"}},\"storageClassName\":\"longhorn-ubuntu-22\",\"volumeMode\":\"Block\"},\"status\":{}}]"
+// 		},
+// 		"labels": {
+// 			"harvesterhci.io/creator": "harvester",
+// 			"harvesterhci.io/os": "linux",
+// 			"harvesterhci.io/vmName": "runner",
+// 			"tag.harvesterhci.io/ssh-user": "ubuntu"
+// 		},
+// 		"name": "test-4",
+// 		"namespace": "drew"
+// 	},
+// 	"spec": {
+// 		"runStrategy": "RerunOnFailure",
+// 		"template": {
+// 			"metadata": {
+// 				"annotations": {
+// 					"harvesterhci.io/waitForLeaseInterfaceNames": "[\"nic-1\"]"
+// 				},
+// 				"labels": {
+// 					"harvesterhci.io/creator": "terraform-provider-harvester",
+// 					"harvesterhci.io/vmName": "test",
+// 					"tag.harvesterhci.io/ssh-user": "ubuntu"
+// 				}
+// 			},
+// 			"spec": {
+// 				"affinity": {
+// 					"nodeAffinity": {
+// 						"requiredDuringSchedulingIgnoredDuringExecution": {
+// 							"nodeSelectorTerms": [
+// 								{
+// 									"matchExpressions": [
+// 										{
+// 											"key": "network.harvesterhci.io/mgmt",
+// 											"operator": "In",
+// 											"values": [
+// 												"true"
+// 											]
+// 										}
+// 									]
+// 								}
+// 							]
+// 						}
+// 					},
+// 					"podAntiAffinity": {
+// 						"preferredDuringSchedulingIgnoredDuringExecution": [
+// 							{
+// 								"podAffinityTerm": {
+// 									"labelSelector": {
+// 										"matchExpressions": [
+// 											{
+// 												"key": "harvesterhci.io/creator",
+// 												"operator": "Exists"
+// 											}
+// 										]
+// 									},
+// 									"topologyKey": "kubernetes.io/hostname"
+// 								},
+// 								"weight": 100
+// 							}
+// 						]
+// 					}
+// 				},
+// 				"domain": {
+// 					"cpu": {
+// 						"cores": 1
+// 					},
+// 					"devices": {
+// 						"disks": [
+// 							{
+// 								"bootOrder": 1,
+// 								"disk": {
+// 									"bus": "virtio"
+// 								},
+// 								"name": "rootdisk"
+// 							},
+// 							{
+// 								"disk": {
+// 									"bus": "virtio"
+// 								},
+// 								"name": "cloudinitdisk"
+// 							}
+// 						],
+// 						"interfaces": [
+// 							{
+// 								"bridge": {},
+// 								"macAddress": "1e:31:ed:d3:83:9c",
+// 								"model": "virtio",
+// 								"name": "nic-1"
+// 							}
+// 						]
+// 					},
+// 					"features": {
+// 						"acpi": {},
+// 						"smm": {
+// 							"enabled": true
+// 						}
+// 					},
+// 					"firmware": {
+// 						"bootloader": {
+// 							"efi": {
+// 								"secureBoot": true
+// 							}
+// 						}
+// 					},
+// 					"machine": {
+// 						"type": "q35"
+// 					},
+// 					"memory": {
+// 						"guest": "1024Mi"
+// 					},
+// 					"resources": {
+// 						"limits": {
+// 							"cpu": "1",
+// 							"memory": "2Gi"
+// 						},
+// 						"requests": {
+// 							"cpu": "1",
+// 							"memory": "2Gi"
+// 						}
+// 					}
+// 				},
+// 				"evictionStrategy": "LiveMigrate",
+// 				"hostname": "test",
+// 				"networks": [
+// 					{
+// 						"multus": {
+// 							"networkName": "harvester-public/lab"
+// 						},
+// 						"name": "nic-1"
+// 					}
+// 				],
+// 				"terminationGracePeriodSeconds": 120,
+// 				"volumes": [
+// 					{
+// 						"name": "rootdisk",
+// 						"persistentVolumeClaim": {
+// 							"claimName": "packer-build"
+// 						}
+// 					},
+// 					{
+// 						"cloudInitNoCloud": {
+// 							"networkDataSecretRef": {
+// 								"name": "packer"
+// 							},
+// 							"secretRef": {
+// 								"name": "packer"
+// 							}
+// 						},
+// 						"name": "cloudinitdisk"
+// 					}
+// 				]
+// 			}
+// 		}
+// 	}
+//  }
+//  `

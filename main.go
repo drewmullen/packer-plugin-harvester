@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"os"
 
-	img "github.com/rptcloud/packer-plugin-harvester/builder/harvester/img"
+	harvester "github.com/rptcloud/packer-plugin-harvester/builder/harvester"
 
 	"github.com/hashicorp/packer-plugin-sdk/plugin"
 )
 
 func main() {
 	pps := plugin.NewSet()
-	pps.RegisterBuilder("img", new(img.Builder))
+	pps.RegisterBuilder(plugin.DEFAULT_NAME, new(harvester.Builder))
 	// pps.RegisterPostProcessor("import", new(digitaloceanPP.PostProcessor))
 	// pps.RegisterDatasource("image", new(image.Datasource))
 	// pps.SetVersion(version.PluginVersion)

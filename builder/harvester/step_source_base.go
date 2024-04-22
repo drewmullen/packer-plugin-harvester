@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package img
+package harvester
 
 import (
 	"context"
@@ -37,14 +37,14 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 	desiredState := int32(100)
 	timeout := 2 * time.Minute
 	namespace := c.HarvesterNamespace
-	url := c.BuildSource.URL
-	ostype := c.BuildSource.OSType
-	sourceName := c.BuildSource.Name
+	url := c.BuilderSource.URL
+	ostype := c.BuilderSource.OSType
+	sourceName := c.BuilderSource.Name
 	var displayName string
-	if c.BuildSource.DisplayName == "" {
+	if c.BuilderSource.DisplayName == "" {
 		displayName = sourceName
 	} else {
-		displayName = c.BuildSource.DisplayName
+		displayName = c.BuilderSource.DisplayName
 	}
 
 	annotations := map[string]string{
@@ -60,8 +60,8 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 		SourceType:  "download",
 		Url:         &url,
 	}
-	if c.BuildSource.Checksum != "" {
-		spec.Checksum = &c.BuildSource.Checksum
+	if c.BuilderSource.Checksum != "" {
+		spec.Checksum = &c.BuilderSource.Checksum
 	}
 	img := &harvester.HarvesterhciIoV1beta1VirtualMachineImage{
 		ApiVersion: &ApiVersionHarvesterKey,

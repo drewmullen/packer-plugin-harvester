@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package img
+package harvester
 
 // packersdk.Artifact implementation
 type Artifact struct {
