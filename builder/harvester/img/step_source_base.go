@@ -60,6 +60,9 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 		SourceType:  "download",
 		Url:         &url,
 	}
+	if c.BuildSource.Checksum != "" {
+		spec.Checksum = &c.BuildSource.Checksum
+	}
 	img := &harvester.HarvesterhciIoV1beta1VirtualMachineImage{
 		ApiVersion: &ApiVersionHarvesterKey,
 		Kind:       &KindVirtualMachineImage,

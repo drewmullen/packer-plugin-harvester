@@ -5,7 +5,6 @@ package img
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -30,15 +29,16 @@ func (s *StepCreateVM) Run(_ context.Context, state multistep.StateBag) multiste
 	c := state.Get("config").(*Config)
 
 	// temp for hardcoded payload
-	vmBody := []byte(vmStr)
-	vmObj := &harvester.KubevirtIoApiCoreV1VirtualMachine{}
-	json.Unmarshal(vmBody, vmObj)
+	// vmBody := []byte(vmStr)
+	// vmObj := &harvester.KubevirtIoApiCoreV1VirtualMachine{}
+	// json.Unmarshal(vmBody, vmObj)
 
 	req := client.VirtualMachinesAPI.CreateNamespacedVirtualMachine(auth, c.HarvesterNamespace)
 
-	req = req.KubevirtIoApiCoreV1VirtualMachine(*vmObj)
+	req = req.KubevirtIoApiCoreV1VirtualMachine(*vmObject)
 	vm, _, err := client.VirtualMachinesAPI.CreateNamespacedVirtualMachineExecute(req)
 
+	// TODO: Gracefully fail if VM with name already exists
 	if err != nil {
 		ui.Error(fmt.Sprintf("Error creating VM: %v", err))
 	}
@@ -88,6 +88,7 @@ func waitForVMState(desiredState string, name string, namespace string, client h
 			return err
 		}
 
+		// TODO: handle failure states
 		if *currentState.Status.Phase == desiredState {
 			return nil
 		}
@@ -99,6 +100,185 @@ func waitForVMState(desiredState string, name string, namespace string, client h
 		ui.Say("Waiting for VM to be ready...")
 		time.Sleep(5 * time.Second) // Adjust the polling interval as needed
 	}
+}
+
+var vmObject = &harvester.KubevirtIoApiCoreV1VirtualMachine{
+	ApiVersion: &ApiVersionKubevirt,
+	Kind:       &KindVirtualMachine,
+	Metadata: &harvester.K8sIoV1ObjectMeta{
+		Annotations: &map[string]string{
+			"harvesterhci.io/vmRunStrategy":            "RerunOnFailure",
+			"kubevirt.io/latest-observed-api-version":  "v1",
+			"kubevirt.io/storage-observed-api-version": "v1alpha3",
+			"network.harvesterhci.io/ips":              "[]",
+			"harvesterhci.io/volumeClaimTemplates":     "[{\"metadata\":{\"name\":\"packer-build\",\"creationTimestamp\":null,\"annotations\":{\"harvesterhci.io/imageId\":\"drew/drewbuntu\",\"terraform-provider-harvester-auto-delete\":\"true\"}},\"spec\":{\"accessModes\":[\"ReadWriteMany\"],\"resources\":{\"requests\":{\"storage\":\"100Gi\"}},\"storageClassName\":\"longhorn-ubuntu-22\",\"volumeMode\":\"Block\"},\"status\":{}}]",
+		},
+		Labels: &map[string]string{
+			"harvesterhci.io/creator":      "harvester",
+			"harvesterhci.io/os":           "linux",
+			"harvesterhci.io/vmName":       "runner",
+			"tag.harvesterhci.io/ssh-user": "ubuntu",
+		},
+		Name:      toStringPtr("test-4"),
+		Namespace: toStringPtr("drew"),
+	},
+	Spec: harvester.KubevirtIoApiCoreV1VirtualMachineSpec{
+		RunStrategy: &VirtualMachineSpecRunStrategy,
+		Template: harvester.KubevirtIoApiCoreV1VirtualMachineInstanceTemplateSpec{
+			Metadata: &harvester.K8sIoV1ObjectMeta{
+				Annotations: &map[string]string{
+					"harvesterhci.io/waitForLeaseInterfaceNames": "[\"nic-1\"]",
+				},
+				Labels: &map[string]string{
+					"harvesterhci.io/creator":      "packer-plugin-terraform",
+					"harvesterhci.io/vmName":       "test",
+					"tag.harvesterhci.io/ssh-user": "ubuntu",
+				},
+			},
+			Spec: &harvester.KubevirtIoApiCoreV1VirtualMachineInstanceSpec{
+				Affinity: &harvester.K8sIoV1Affinity{
+					NodeAffinity: &harvester.K8sIoV1NodeAffinity{
+						RequiredDuringSchedulingIgnoredDuringExecution: &harvester.K8sIoV1NodeSelector{
+							NodeSelectorTerms: []harvester.K8sIoV1NodeSelectorTerm{
+								{
+									MatchExpressions: []harvester.K8sIoV1NodeSelectorRequirement{
+										{
+											Key:      "network.harvesterhci.io/mgmt",
+											Operator: "In",
+											Values:   []string{"true"},
+										},
+									},
+								},
+							},
+						},
+					},
+					PodAntiAffinity: &harvester.K8sIoV1PodAntiAffinity{
+						PreferredDuringSchedulingIgnoredDuringExecution: []harvester.K8sIoV1WeightedPodAffinityTerm{
+							{
+								PodAffinityTerm: harvester.K8sIoV1PodAffinityTerm{
+									LabelSelector: &harvester.K8sIoV1LabelSelector{
+										MatchExpressions: []harvester.K8sIoV1LabelSelectorRequirement{
+											{
+												Key:      "harvesterhci.io/creator",
+												Operator: "Exists",
+											},
+										},
+									},
+									TopologyKey: "kubernetes.io/hostname",
+								},
+								Weight: 100,
+							},
+						},
+					},
+				},
+				Domain: harvester.KubevirtIoApiCoreV1DomainSpec{
+					Cpu: &harvester.KubevirtIoApiCoreV1CPU{
+						Cores: toInt64Ptr(1),
+					},
+					Devices: harvester.KubevirtIoApiCoreV1Devices{
+						Disks: []harvester.KubevirtIoApiCoreV1Disk{
+							{
+								BootOrder: toInt32Ptr(1),
+								Disk: &harvester.KubevirtIoApiCoreV1DiskTarget{
+									Bus: toStringPtr("virtio"),
+								},
+								Name: "rootdisk",
+							},
+							{
+								Disk: &harvester.KubevirtIoApiCoreV1DiskTarget{
+									Bus: toStringPtr("virtio"),
+								},
+								Name: "cloudinitdisk",
+							},
+						},
+						Interfaces: []harvester.KubevirtIoApiCoreV1Interface{
+							{
+								Bridge:     map[string]interface{}{},
+								MacAddress: toStringPtr("1e:31:ed:d3:83:9c"),
+								Model:      toStringPtr("virtio"),
+								Name:       "nic-1",
+							},
+						},
+					},
+					Features: &harvester.KubevirtIoApiCoreV1Features{
+						Acpi: &harvester.KubevirtIoApiCoreV1FeatureState{},
+						Smm: &harvester.KubevirtIoApiCoreV1FeatureState{
+							Enabled: toBoolPtr(true),
+						},
+					},
+					Firmware: &harvester.KubevirtIoApiCoreV1Firmware{
+						Bootloader: &harvester.KubevirtIoApiCoreV1Bootloader{
+							Efi: &harvester.KubevirtIoApiCoreV1EFI{
+								SecureBoot: toBoolPtr(true),
+							},
+						},
+					},
+					Machine: &harvester.KubevirtIoApiCoreV1Machine{
+						Type: toStringPtr("q35"),
+					},
+					Memory: &harvester.KubevirtIoApiCoreV1Memory{
+						Guest: toStringPtr("1024Mi"),
+					},
+					Resources: &harvester.KubevirtIoApiCoreV1ResourceRequirements{
+						Limits: map[string]string{
+							"cpu":    "1",
+							"memory": "2Gi",
+						},
+						Requests: map[string]string{
+							"cpu":    "1",
+							"memory": "2Gi",
+						},
+					},
+				},
+				EvictionStrategy: toStringPtr("LiveMigrate"),
+				Hostname:         toStringPtr("test"),
+				Networks: []harvester.KubevirtIoApiCoreV1Network{
+					{
+						Multus: &harvester.KubevirtIoApiCoreV1MultusNetwork{
+							NetworkName: "harvester-public/lab",
+						},
+						Name: "nic-1",
+					},
+				},
+				TerminationGracePeriodSeconds: toInt64Ptr(120),
+				Volumes: []harvester.KubevirtIoApiCoreV1Volume{
+					{
+						Name: "rootdisk",
+						PersistentVolumeClaim: &harvester.KubevirtIoApiCoreV1PersistentVolumeClaimVolumeSource{
+							ClaimName: "packer-build",
+						},
+					},
+					{
+						CloudInitNoCloud: &harvester.KubevirtIoApiCoreV1CloudInitNoCloudSource{
+							NetworkDataSecretRef: &harvester.K8sIoV1LocalObjectReference{
+								Name: toStringPtr("packer"),
+							},
+							SecretRef: &harvester.K8sIoV1LocalObjectReference{
+								Name: toStringPtr("packer"),
+							},
+						},
+						Name: "cloudinitdisk",
+					},
+				},
+			},
+		},
+	},
+}
+
+func toStringPtr(s string) *string {
+	return &s
+}
+
+func toBoolPtr(b bool) *bool {
+	return &b
+}
+
+func toInt64Ptr(i int64) *int64 {
+	return &i
+}
+
+func toInt32Ptr(i int32) *int32 {
+	return &i
 }
 
 var vmStr string = `{

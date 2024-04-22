@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:generate packer-sdc mapstructure-to-hcl2 -type Config,BuildSource
+//go:generate packer-sdc mapstructure-to-hcl2 -type Config,BuildSource,BuildTarget
 
 package img
 
@@ -28,14 +28,8 @@ type Config struct {
 	HarvesterToken      string `mapstructure:"harvester_token"`
 	HarvesterNamespace  string `mapstructure:"harvester_namespace"`
 
-	// SourceDownloadURL      string `mapstructure:"source_download_url"`
-	// SourceImageName        string `mapstructure:"source_image_name"`
-	// SourceImageDisplayName string `mapstructure:"source_image_display_name" required:"false"`
-	// OSType                 string `mapstructure:"os_type"`
-
 	BuildSource BuildSource `mapstructure:"build_source"`
-	// TargetImageName        string `mapstructure:"target_image_name"`
-	// TargetImageDisplayName string `mapstructure:"target_image_display_name" required:"false"`
+	BuildTarget BuildTarget `mapstructure:"build_target"`
 }
 
 type BuildSource struct {
@@ -47,6 +41,12 @@ type BuildSource struct {
 	DisplayName string `mapstructure:"display_name" required:"false"`
 	Checksum    string `mapstructure:"checksum" required:"false"`
 	Cleanup     bool   `mapstructure:"cleanup" required:"false"`
+}
+
+type BuildTarget struct {
+	Namespace        string `mapstructure:"namespace" required:"false"`
+	DisplayName      string `mapstructure:"display_name"`
+	StorageClassName string `mapstructure:"storage_class_name" required:"false"`
 }
 
 type Builder struct {
@@ -109,6 +109,7 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 	steps = append(steps,
 		&StepSourceBase{},
 		&StepCreateVM{},
+		// TODO: on hold, cannot track status of exported VM
 		// &StepExportVMImage{},
 		&StepTerminateVM{},
 		// new(commonsteps.StepProvision),

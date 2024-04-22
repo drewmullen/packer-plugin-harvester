@@ -42,6 +42,33 @@ func (*FlatBuildSource) HCL2Spec() map[string]hcldec.Spec {
 	return s
 }
 
+// FlatBuildTarget is an auto-generated flat version of BuildTarget.
+// Where the contents of a field with a `mapstructure:,squash` tag are bubbled up.
+type FlatBuildTarget struct {
+	Namespace        *string `mapstructure:"namespace" required:"false" cty:"namespace" hcl:"namespace"`
+	DisplayName      *string `mapstructure:"display_name" cty:"display_name" hcl:"display_name"`
+	StorageClassName *string `mapstructure:"storage_class_name" required:"false" cty:"storage_class_name" hcl:"storage_class_name"`
+}
+
+// FlatMapstructure returns a new FlatBuildTarget.
+// FlatBuildTarget is an auto-generated flat version of BuildTarget.
+// Where the contents a fields with a `mapstructure:,squash` tag are bubbled up.
+func (*BuildTarget) FlatMapstructure() interface{ HCL2Spec() map[string]hcldec.Spec } {
+	return new(FlatBuildTarget)
+}
+
+// HCL2Spec returns the hcl spec of a BuildTarget.
+// This spec is used by HCL to read the fields of BuildTarget.
+// The decoded values from this spec will then be applied to a FlatBuildTarget.
+func (*FlatBuildTarget) HCL2Spec() map[string]hcldec.Spec {
+	s := map[string]hcldec.Spec{
+		"namespace":          &hcldec.AttrSpec{Name: "namespace", Type: cty.String, Required: false},
+		"display_name":       &hcldec.AttrSpec{Name: "display_name", Type: cty.String, Required: false},
+		"storage_class_name": &hcldec.AttrSpec{Name: "storage_class_name", Type: cty.String, Required: false},
+	}
+	return s
+}
+
 // FlatConfig is an auto-generated flat version of Config.
 // Where the contents of a field with a `mapstructure:,squash` tag are bubbled up.
 type FlatConfig struct {
@@ -57,6 +84,7 @@ type FlatConfig struct {
 	HarvesterToken      *string           `mapstructure:"harvester_token" cty:"harvester_token" hcl:"harvester_token"`
 	HarvesterNamespace  *string           `mapstructure:"harvester_namespace" cty:"harvester_namespace" hcl:"harvester_namespace"`
 	BuildSource         *FlatBuildSource  `mapstructure:"build_source" cty:"build_source" hcl:"build_source"`
+	BuildTarget         *FlatBuildTarget  `mapstructure:"build_target" cty:"build_target" hcl:"build_target"`
 }
 
 // FlatMapstructure returns a new FlatConfig.
@@ -83,6 +111,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"harvester_token":            &hcldec.AttrSpec{Name: "harvester_token", Type: cty.String, Required: false},
 		"harvester_namespace":        &hcldec.AttrSpec{Name: "harvester_namespace", Type: cty.String, Required: false},
 		"build_source":               &hcldec.BlockSpec{TypeName: "build_source", Nested: hcldec.ObjectSpec((*FlatBuildSource)(nil).HCL2Spec())},
+		"build_target":               &hcldec.BlockSpec{TypeName: "build_target", Nested: hcldec.ObjectSpec((*FlatBuildTarget)(nil).HCL2Spec())},
 	}
 	return s
 }
