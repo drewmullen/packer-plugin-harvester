@@ -62,9 +62,8 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 		&StepCreateVolume{},
 		&StepCreateVM{},
 		// TODO: on hold, cannot track status of exported VM
-		// &StepExportVMImage{},
-		// &StepTerminateVM{},
 		// new(commonsteps.StepProvision),
+		// &StepExportVMImage{},
 	)
 
 	// Set the value of the generated data that will become available to provisioners.
