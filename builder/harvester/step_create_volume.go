@@ -5,9 +5,7 @@ package harvester
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"time"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
@@ -28,63 +26,40 @@ func (s *StepCreateVolume) Run(_ context.Context, state multistep.StateBag) mult
 	ui := state.Get("ui").(packersdk.Ui)
 	c := state.Get("config").(*Config)
 
-	// Prepare values for temporary build VM
-	if c.BuilderConfiguration.Namespace == "" {
-		vmObject.Metadata.Namespace = toStringPtr(c.HarvesterNamespace)
-	} else {
-		vmObject.Metadata.Namespace = toStringPtr(c.BuilderConfiguration.Namespace)
+	req := client.VolumesAPI.CreateNamespacedPersistentVolumeClaim(auth, c.HarvesterNamespace)
+
+	claimInput := &harvester.K8sIoV1PersistentVolumeClaim{
+		Metadata: &harvester.K8sIoV1ObjectMeta{
+			GenerateName: &c.BuilderConfiguration.NamePrefix,
+			Annotations: &map[string]string{
+				"harvesterhci.io/imageId": fmt.Sprintf("%s/%s", c.HarvesterNamespace, c.BuilderSource.Name),
+			},
+		},
+		Spec: &harvester.K8sIoV1PersistentVolumeClaimSpec{
+			AccessModes: []string{"ReadWriteMany"},
+			Resources: &harvester.K8sIoV1ResourceRequirements{
+				Requests: map[string]string{
+					"storage": c.BuilderTarget.VolumeSize,
+				},
+			},
+			StorageClassName: toStringPtr(GetImageStorageClassName(c.BuilderSource.Name)),
+			VolumeMode:       toStringPtr("Block"),
+		},
 	}
-
-	if c.BuilderConfiguration.NamePrefix == "" {
-		vmObject.Metadata.GenerateName = toStringPtr("packer-")
-	} else {
-		vmObject.Metadata.GenerateName = &c.BuilderConfiguration.NamePrefix
-	}
-
-	if c.BuilderConfiguration.CPU != 0 {
-		vmObject.Spec.Template.Spec.Domain.Cpu.Cores = &c.BuilderConfiguration.CPU
-	}
-
-	if c.BuilderConfiguration.Memory == "" {
-		vmObject.Spec.Template.Spec.Domain.Resources.Requests["memory"] = "2Gi"
-	} else {
-		vmObject.Spec.Template.Spec.Domain.Resources.Requests["memory"] = c.BuilderConfiguration.Memory
-	}
-
-	req := client.VirtualMachinesAPI.CreateNamespacedVirtualMachine(auth, c.HarvesterNamespace)
-
-	req = req.KubevirtIoApiCoreV1VirtualMachine(*vmObject)
-	vm, _, err := client.VirtualMachinesAPI.CreateNamespacedVirtualMachineExecute(req)
-
-	// TODO: Gracefully fail if VM with name already exists
-	if err != nil {
-		ui.Error(fmt.Sprintf("Error creating VM: %v", err))
-	}
-
-	// could use generateName
-	if vm.Metadata.Name == nil {
-		ui.Error("VM name is nil")
-		return multistep.ActionHalt
-	}
-	name := *vm.Metadata.Name
-	state.Put("Name", *vm.Metadata.Name)
-
-	ui.Say(fmt.Sprintf("Creating builder VM. Name is %v", name))
-	ui.Say(fmt.Sprintf("Waiting for VM, %v, to report as \"Running\"", name))
-
-	timeout := 2 * time.Minute
-	desiredState := "Running"
-	time.Sleep(3 * time.Second)
-	err = waitForVMState(desiredState, name, c.HarvesterNamespace, *client, auth, timeout, ui)
+	req = req.K8sIoV1PersistentVolumeClaim(*claimInput)
+	claim, _, err := req.Execute()
 
 	if err != nil {
-		err := fmt.Errorf("error waiting for vm, %v, to become %v: %s", name, desiredState, err)
-		state.Put("error", err)
-		ui.Error(err.Error())
-		return multistep.ActionHalt
+		ui.Error(fmt.Sprintf("Error creating volume: %v", err))
 	}
 
-	ui.Say("VM created and ready for use")
+	if claim.Metadata.Name == nil || *claim.Metadata.Name == "" {
+		ui.Error("Volume name is empty")
+		return multistep.ActionHalt
+	}
+	state.Put("volumeName", *claim.Metadata.Name)
+
+	ui.Say(fmt.Sprintf("Volume %s created and ready for use", *claim.Metadata.Name))
 
 	// Determines that should continue to the next step
 	return multistep.ActionContinue
@@ -92,30 +67,27 @@ func (s *StepCreateVolume) Run(_ context.Context, state multistep.StateBag) mult
 
 // Cleanup can be used to clean up any artifact created by the step.
 // A step's clean up always run at the end of a build, regardless of whether provisioning succeeds or fails.
-func (s *StepCreateVolume) Cleanup(_ multistep.StateBag) {
+func (s *StepCreateVolume) Cleanup(state multistep.StateBag) {
 	// Nothing to clean
+
+	client := state.Get("client").(*harvester.APIClient)
+	auth := state.Get("auth").(context.Context)
+	ui := state.Get("ui").(packersdk.Ui)
+	c := state.Get("config").(*Config)
+
+	volumeName := state.Get("volumeName").(string)
+
+	ui.Say(fmt.Sprintf("Deleting volume %s in namespace %s", volumeName, c.HarvesterNamespace))
+
+	req := client.VolumesAPI.DeleteNamespacedPersistentVolumeClaim(auth, volumeName, c.HarvesterNamespace)
+	req = req.K8sIoV1DeleteOptions(harvester.K8sIoV1DeleteOptions{})
+	_, _, err := req.Execute()
+
+	if err != nil {
+		ui.Error(fmt.Sprintf("Error deleting volume: %v", err))
+	}
 }
 
-func waitForVolumeState(desiredState string, name string, namespace string, client harvester.APIClient, auth context.Context, timeout time.Duration, ui packersdk.Ui) error {
-	startTime := time.Now()
-
-	for {
-		readReq := client.VirtualMachinesAPI.ReadNamespacedVirtualMachineInstance(auth, name, namespace)
-		currentState, _, err := readReq.Execute()
-		if err != nil {
-			return err
-		}
-
-		// TODO: handle failure states
-		if *currentState.Status.Phase == desiredState {
-			return nil
-		}
-
-		if time.Since(startTime) >= timeout {
-			return errors.New("timeout waiting for desired state")
-		}
-
-		ui.Say("Waiting for VM to be ready...")
-		time.Sleep(5 * time.Second) // Adjust the polling interval as needed
-	}
+func GetImageStorageClassName(imageName string) string {
+	return fmt.Sprintf("longhorn-%s", imageName)
 }

@@ -5,7 +5,6 @@ package harvester
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
@@ -102,32 +101,4 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 // A step's clean up always run at the end of a build, regardless of whether provisioning succeeds or fails.
 func (s *StepSourceBase) Cleanup(_ multistep.StateBag) {
 	// Nothing to clean
-}
-
-func waitForImageDownload(desiredState int32, name string, namespace string, client harvester.APIClient, auth context.Context, timeout time.Duration, ui packersdk.Ui) error {
-	startTime := time.Now()
-	for {
-		readReq := client.ImagesAPI.ReadNamespacedVirtualMachineImage(auth, name, namespace)
-		readImage, _, err := readReq.Execute()
-		if err != nil {
-			return err
-		}
-
-		progress := int32(0)
-		// image.Status.Progress key doesnt appear until download progress starts
-		if readImage.Status.HasProgress() {
-			if *readImage.Status.Progress == desiredState {
-				return nil
-			} else {
-				progress = *readImage.Status.Progress
-			}
-		}
-
-		if time.Since(startTime) >= timeout {
-			return errors.New("timeout waiting for desired state")
-		}
-
-		ui.Say(fmt.Sprintf("Download in progress... %v%%", progress))
-		time.Sleep(5 * time.Second) // Adjust the polling interval as needed
-	}
 }

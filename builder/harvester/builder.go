@@ -1,66 +1,19 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
-
-//go:generate packer-sdc mapstructure-to-hcl2 -type Config,BuilderSource,BuilderConfiguration,BuilderTarget
-
 package harvester
 
 import (
 	"context"
-	"os"
 
 	"github.com/hashicorp/hcl/v2/hcldec"
-	"github.com/hashicorp/packer-plugin-sdk/common"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/multistep/commonsteps"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
-	"github.com/hashicorp/packer-plugin-sdk/template/config"
 
 	harvester "github.com/drewmullen/harvester-go-sdk"
 )
 
 const BuilderId = "harvester.builder"
-
-type Config struct {
-	common.PackerConfig `mapstructure:",squash"`
-	HarvesterURL        string `mapstructure:"harvester_url"`
-	HarvesterToken      string `mapstructure:"harvester_token"`
-	HarvesterNamespace  string `mapstructure:"harvester_namespace"`
-
-	BuilderSource        BuilderSource        `mapstructure:"builder_source"`
-	BuilderConfiguration BuilderConfiguration `mapstructure:"builder_configuration"`
-	BuilderTarget        BuilderTarget        `mapstructure:"builder_target"`
-}
-
-type BuilderSource struct {
-	Name      string `mapstructure:"name"`
-	OSType    string `mapstructure:"os_type"`
-	ImageType string `mapstructure:"image_type"`
-
-	URL         string `mapstructure:"url" required:"false"`
-	DisplayName string `mapstructure:"display_name" required:"false"`
-	Checksum    string `mapstructure:"checksum" required:"false"`
-	Cleanup     bool   `mapstructure:"cleanup" required:"false"`
-}
-
-type BuilderConfiguration struct {
-	// default to HarvesterNamespace
-	Namespace string `mapstructure:"namespace" required:"false"`
-	// default to "packer-"
-	NamePrefix string `mapstructure:"name_prefix" required:"false"`
-	// default 1
-	CPU int64 `mapstructure:"cpu" required:"false"`
-	// default 2Gi
-	Memory string `mapstructure:"memory" required:"false"`
-	// PreventBuilderImageCleanup bool `mapstructure:"prevent_builder_image_cleanup" required:"false"`
-}
-
-type BuilderTarget struct {
-	// default to HarvesterNamespace
-	Namespace        string `mapstructure:"namespace" required:"false"`
-	DisplayName      string `mapstructure:"display_name" required:"false"`
-	StorageClassName string `mapstructure:"storage_class_name" required:"false"`
-}
 
 type Builder struct {
 	config Config
@@ -69,29 +22,14 @@ type Builder struct {
 
 func (b *Builder) ConfigSpec() hcldec.ObjectSpec { return b.config.FlatMapstructure().HCL2Spec() }
 
-func (b *Builder) Prepare(raws ...interface{}) (generatedVars []string, warnings []string, err error) {
-	err = config.Decode(&b.config, &config.DecodeOpts{
-		PluginType:  "packer.builder.harvester",
-		Interpolate: true,
-	}, raws...)
-	if err != nil {
-		return nil, nil, err
+func (b *Builder) Prepare(raws ...interface{}) ([]string, []string, error) {
+
+	warnings, errs := b.config.Prepare(raws...)
+	if errs != nil {
+		return nil, warnings, errs
 	}
 
-	if b.config.HarvesterURL == "" {
-		b.config.HarvesterURL = os.Getenv("HARVESTER_URL")
-	}
-	if b.config.HarvesterToken == "" {
-		b.config.HarvesterToken = os.Getenv("HARVESTER_TOKEN")
-	}
-	if b.config.HarvesterNamespace == "" {
-		b.config.HarvesterNamespace = os.Getenv("HARVESTER_NAMESPACE")
-	}
-
-	// Return the placeholder for the generated data that will become available to provisioners and post-processors.
-	// If the builder doesn't generate any data, just return an empty slice of string: []string{}
-	// buildGeneratedData := []string{"GeneratedMockData"}
-	return []string{}, nil, nil
+	return nil, warnings, nil
 }
 
 func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (packer.Artifact, error) {
@@ -125,7 +63,7 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 		&StepCreateVM{},
 		// TODO: on hold, cannot track status of exported VM
 		// &StepExportVMImage{},
-		&StepTerminateVM{},
+		// &StepTerminateVM{},
 		// new(commonsteps.StepProvision),
 	)
 

@@ -7,9 +7,11 @@ var (
 
 var (
 	KindVirtualMachineImage string = "VirtualMachineImage"
-	KindVirtualMachine      string = "VirtualMachineImage"
+	KindVirtualMachine      string = "VirtualMachine"
+	KindVolume              string = "PersistentVolumeClaim"
 )
 
 var (
 	VirtualMachineSpecRunStrategy string = "RerunOnFailure"
+	StorageClassName              string = "harvester-longhorn"
 )

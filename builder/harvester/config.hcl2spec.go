@@ -10,11 +10,10 @@ import (
 // FlatBuilderConfiguration is an auto-generated flat version of BuilderConfiguration.
 // Where the contents of a field with a `mapstructure:,squash` tag are bubbled up.
 type FlatBuilderConfiguration struct {
-	Namespace                  *string `mapstructure:"namespace" required:"false" cty:"namespace" hcl:"namespace"`
-	NamePrefix                 *string `mapstructure:"name_prefix" required:"false" cty:"name_prefix" hcl:"name_prefix"`
-	CPU                        *int64  `mapstructure:"cpu" required:"false" cty:"cpu" hcl:"cpu"`
-	Memory                     *string `mapstructure:"memory" required:"false" cty:"memory" hcl:"memory"`
-	PreventBuilderImageCleanup *bool   `mapstructure:"prevent_builder_image_cleanup" required:"false" cty:"prevent_builder_image_cleanup" hcl:"prevent_builder_image_cleanup"`
+	Namespace  *string `mapstructure:"namespace" required:"false" cty:"namespace" hcl:"namespace"`
+	NamePrefix *string `mapstructure:"name_prefix" required:"false" cty:"name_prefix" hcl:"name_prefix"`
+	CPU        *int64  `mapstructure:"cpu" required:"false" cty:"cpu" hcl:"cpu"`
+	Memory     *string `mapstructure:"memory" required:"false" cty:"memory" hcl:"memory"`
 }
 
 // FlatMapstructure returns a new FlatBuilderConfiguration.
@@ -29,11 +28,10 @@ func (*BuilderConfiguration) FlatMapstructure() interface{ HCL2Spec() map[string
 // The decoded values from this spec will then be applied to a FlatBuilderConfiguration.
 func (*FlatBuilderConfiguration) HCL2Spec() map[string]hcldec.Spec {
 	s := map[string]hcldec.Spec{
-		"namespace":                     &hcldec.AttrSpec{Name: "namespace", Type: cty.String, Required: false},
-		"name_prefix":                   &hcldec.AttrSpec{Name: "name_prefix", Type: cty.String, Required: false},
-		"cpu":                           &hcldec.AttrSpec{Name: "cpu", Type: cty.Number, Required: false},
-		"memory":                        &hcldec.AttrSpec{Name: "memory", Type: cty.String, Required: false},
-		"prevent_builder_image_cleanup": &hcldec.AttrSpec{Name: "prevent_builder_image_cleanup", Type: cty.Bool, Required: false},
+		"namespace":   &hcldec.AttrSpec{Name: "namespace", Type: cty.String, Required: false},
+		"name_prefix": &hcldec.AttrSpec{Name: "name_prefix", Type: cty.String, Required: false},
+		"cpu":         &hcldec.AttrSpec{Name: "cpu", Type: cty.Number, Required: false},
+		"memory":      &hcldec.AttrSpec{Name: "memory", Type: cty.String, Required: false},
 	}
 	return s
 }
@@ -76,9 +74,9 @@ func (*FlatBuilderSource) HCL2Spec() map[string]hcldec.Spec {
 // FlatBuilderTarget is an auto-generated flat version of BuilderTarget.
 // Where the contents of a field with a `mapstructure:,squash` tag are bubbled up.
 type FlatBuilderTarget struct {
-	Namespace        *string `mapstructure:"namespace" required:"false" cty:"namespace" hcl:"namespace"`
-	DisplayName      *string `mapstructure:"display_name" required:"false" cty:"display_name" hcl:"display_name"`
-	StorageClassName *string `mapstructure:"storage_class_name" required:"false" cty:"storage_class_name" hcl:"storage_class_name"`
+	Namespace   *string `mapstructure:"namespace" required:"false" cty:"namespace" hcl:"namespace"`
+	DisplayName *string `mapstructure:"display_name" required:"false" cty:"display_name" hcl:"display_name"`
+	VolumeSize  *string `mapstructure:"volume_size" required:"false" cty:"volume_size" hcl:"volume_size"`
 }
 
 // FlatMapstructure returns a new FlatBuilderTarget.
@@ -93,9 +91,9 @@ func (*BuilderTarget) FlatMapstructure() interface{ HCL2Spec() map[string]hcldec
 // The decoded values from this spec will then be applied to a FlatBuilderTarget.
 func (*FlatBuilderTarget) HCL2Spec() map[string]hcldec.Spec {
 	s := map[string]hcldec.Spec{
-		"namespace":          &hcldec.AttrSpec{Name: "namespace", Type: cty.String, Required: false},
-		"display_name":       &hcldec.AttrSpec{Name: "display_name", Type: cty.String, Required: false},
-		"storage_class_name": &hcldec.AttrSpec{Name: "storage_class_name", Type: cty.String, Required: false},
+		"namespace":    &hcldec.AttrSpec{Name: "namespace", Type: cty.String, Required: false},
+		"display_name": &hcldec.AttrSpec{Name: "display_name", Type: cty.String, Required: false},
+		"volume_size":  &hcldec.AttrSpec{Name: "volume_size", Type: cty.String, Required: false},
 	}
 	return s
 }

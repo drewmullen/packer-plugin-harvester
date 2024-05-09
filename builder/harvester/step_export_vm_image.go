@@ -5,7 +5,6 @@ package harvester
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
@@ -75,27 +74,4 @@ func (s *StepExportVMImage) Run(_ context.Context, state multistep.StateBag) mul
 // A step's clean up always run at the end of a build, regardless of whether provisioning succeeds or fails.
 func (s *StepExportVMImage) Cleanup(_ multistep.StateBag) {
 	// Nothing to clean
-}
-
-func waitForVMImageExport(desiredState string, name string, namespace string, client harvester.APIClient, auth context.Context, timeout time.Duration, ui packersdk.Ui) error {
-	startTime := time.Now()
-
-	for {
-		readReq := client.VirtualMachinesAPI.ReadNamespacedVirtualMachineInstance(auth, name, namespace)
-		currentState, _, err := readReq.Execute()
-		if err != nil {
-			return err
-		}
-
-		if *currentState.Status.Phase == desiredState {
-			return nil
-		}
-
-		if time.Since(startTime) >= timeout {
-			return errors.New("timeout waiting for desired state")
-		}
-
-		ui.Say("Waiting for VM to be ready...")
-		time.Sleep(5 * time.Second) // Adjust the polling interval as needed
-	}
 }
