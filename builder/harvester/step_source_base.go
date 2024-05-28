@@ -32,11 +32,14 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 	// 	 exists: err
 	// 	 !exists: downloadImage()
 	// if !download, checkImageExists()
+	//test := client.VirtualMachinesAPI.ReadNamespacedVirtualMachineInstance(auth, "test", c.HarvesterNamespace)
+	//_, resp, err := test.Execute()
 
 	desiredState := int32(100)
 	timeout := 2 * time.Minute
 	namespace := c.HarvesterNamespace
 	url := c.BuilderSource.URL
+	checkSum := c.BuilderSource.Checksum //Ethan code
 	ostype := c.BuilderSource.OSType
 	sourceName := c.BuilderSource.Name
 	var displayName string
@@ -73,6 +76,10 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 		},
 		Spec: spec,
 	}
+	//Ethan code
+	if (url != "") && (checkSum != "") && (checkImageExists(*img)) {
+		checkImageChecksum()
+	}
 
 	req := client.ImagesAPI.CreateNamespacedVirtualMachineImage(auth, namespace)
 	req = req.HarvesterhciIoV1beta1VirtualMachineImage(*img)
@@ -95,6 +102,20 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 	ui.Say(fmt.Sprintf("Download complete for image %s!", sourceName))
 
 	return multistep.ActionContinue
+}
+
+// ethan code
+func checkImageExists(img any) bool {
+	if img != nil {
+		return true
+	} else {
+		return false
+	}
+}
+
+// ethan code
+func checkImageChecksum() {
+
 }
 
 // Cleanup can be used to clean up any artifact created by the step.
