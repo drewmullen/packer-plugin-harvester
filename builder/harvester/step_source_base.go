@@ -76,7 +76,7 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 		},
 		Spec: spec,
 	}
-	//Ethan code
+	
 	
 	if url != "" && checkSum != ""{
 		tempimg,err:=checkImageExists(client,auth,displayName,namespace)
@@ -84,12 +84,27 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 			ui.Say(fmt.Sprintf("image with %v does not exist",sourceName))
 		}
 		
-		if checkSum==*tempimg.Spec.Checksum{
+		if checkSum == *tempimg.Spec.Checksum{
 			//TODO:
 			//download/ create image
 		}else{
 			ui.Say(fmt.Sprintf("image with %v already exists and with a different check sum",sourceName))
 		}
+	}else if url != "" && checkSum == ""{
+		tempimg,err:=checkImageExists(client,auth,displayName,namespace)
+
+		if err != nil{
+			//TODO:
+			//download image
+		}else{
+			ui.Say(fmt.Sprintf("image already exists"))
+		}
+	}else if url == nil{
+		tempimg,err:=checkImageExists(client,auth,sourceName,namespace)
+		if err != nil{
+			ui.Say(fmt.Sprintf("image deos not exist %v",err))
+		}
+
 	}
 	
 	req := client.ImagesAPI.CreateNamespacedVirtualMachineImage(auth, namespace)
@@ -115,7 +130,7 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 	return multistep.ActionContinue
 }
 
-// ethan code
+
 
 func checkImageExists(client *harvester.APIClient,auth context.Context,displayName string,namespace string) (harvester.HarvesterhciIoV1beta1VirtualMachineImage, error) {
 	test:=client.ImagesAPI.ReadNamespacedVirtualMachineImage(auth,displayName,namespace)
