@@ -99,7 +99,7 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 		}else{
 			ui.Say(fmt.Sprintf("image already exists"))
 		}
-	}else if url == nil{
+	}else if url == ""{
 		tempimg,err:=checkImageExists(client,auth,sourceName,namespace)
 		if err != nil{
 			ui.Say(fmt.Sprintf("image deos not exist %v",err))
