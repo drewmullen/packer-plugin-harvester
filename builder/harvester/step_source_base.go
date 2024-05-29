@@ -77,10 +77,13 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 		Spec: spec,
 	}
 	//Ethan code
+	var retCheckSum bool
 	if (url != "") && (checkSum != "") && (checkImageExists(*img)) {
-		checkImageChecksum()
+		retCheckSum=checkImageChecksum(checkSum,spec.Checksum)
 	}
-
+	if !retCheckSum {
+		ui.Say(fmt.Sprintf("image with %v already exists and with a different check sum",sourceName))
+	}
 	req := client.ImagesAPI.CreateNamespacedVirtualMachineImage(auth, namespace)
 	req = req.HarvesterhciIoV1beta1VirtualMachineImage(*img)
 	_, _, err := client.ImagesAPI.CreateNamespacedVirtualMachineImageExecute(req)
@@ -108,14 +111,17 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 func checkImageExists(img any) bool {
 	if img != nil {
 		return true
-	} else {
-		return false
-	}
+	} 
+	return false
+	
 }
 
 // ethan code
-func checkImageChecksum() {
-
+func checkImageChecksum(checkSumC any, checkSumS any)bool {
+	if(checkSumC==checkSumS){
+		return true
+	}
+	return false;
 }
 
 // Cleanup can be used to clean up any artifact created by the step.
