@@ -77,13 +77,21 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 		Spec: spec,
 	}
 	//Ethan code
-	var retCheckSum bool
-	if (url != "") && (checkSum != "") && (checkImageExists(*img)) {
-		retCheckSum=checkImageChecksum(checkSum,spec.Checksum)
+	
+	if url != "" && checkSum != ""{
+		tempimg,err:=checkImageExists(client,auth,displayName,namespace)
+		if err != nil{
+			ui.Say(fmt.Sprintf("image with %v does not exist",sourceName))
+		}
+		
+		if checkSum==*tempimg.Spec.Checksum{
+			//TODO:
+			//download/ create image
+		}else{
+			ui.Say(fmt.Sprintf("image with %v already exists and with a different check sum",sourceName))
+		}
 	}
-	if !retCheckSum {
-		ui.Say(fmt.Sprintf("image with %v already exists and with a different check sum",sourceName))
-	}
+	
 	req := client.ImagesAPI.CreateNamespacedVirtualMachineImage(auth, namespace)
 	req = req.HarvesterhciIoV1beta1VirtualMachineImage(*img)
 	_, _, err := client.ImagesAPI.CreateNamespacedVirtualMachineImageExecute(req)
@@ -108,21 +116,15 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 }
 
 // ethan code
-func checkImageExists(img any) bool {
-	if img != nil {
-		return true
-	} 
-	return false
-	
+
+func checkImageExists(client *harvester.APIClient,auth context.Context,displayName string,namespace string) (harvester.HarvesterhciIoV1beta1VirtualMachineImage, error) {
+	test:=client.ImagesAPI.ReadNamespacedVirtualMachineImage(auth,displayName,namespace)
+	tempimg,reqhttp,err:=client.ImagesAPI.ReadNamespacedVirtualMachineImageExecute(test)
+	reqhttp=reqhttp
+	return *tempimg,err
 }
 
-// ethan code
-func checkImageChecksum(checkSumC any, checkSumS any)bool {
-	if(checkSumC==checkSumS){
-		return true
-	}
-	return false;
-}
+
 
 // Cleanup can be used to clean up any artifact created by the step.
 // A step's clean up always run at the end of a build, regardless of whether provisioning succeeds or fails.
