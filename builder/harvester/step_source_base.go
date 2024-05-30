@@ -34,6 +34,7 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 	// if !download, checkImageExists()
 	//test := client.VirtualMachinesAPI.ReadNamespacedVirtualMachineInstance(auth, "test", c.HarvesterNamespace)
 	//_, resp, err := test.Execute()
+	//how would i do this
 
 	desiredState := int32(100)
 	timeout := 2 * time.Minute
@@ -80,6 +81,7 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 	
 	if url != "" && checkSum != ""{
 		tempimg,err:=checkImageExists(client,auth,displayName,namespace)
+
 		if err != nil{
 			ui.Say(fmt.Sprintf("image with %v does not exist",sourceName))
 		}
@@ -87,22 +89,22 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 		if checkSum != *tempimg.Spec.Checksum{
 			ui.Say(fmt.Sprintf("image with %v already exists and with a different check sum",sourceName))
 		}
-			
-		
 	}else if url != "" && checkSum == ""{
 		tempimg,err:=checkImageExists(client,auth,displayName,namespace)
 		tempimg=tempimg
+
 		if err == nil{
 			ui.Say(fmt.Sprintf("image already exists"))
 		}
 	}else if url == ""{
 		tempimg,err:=checkImageExists(client,auth,sourceName,namespace)
 		tempimg=tempimg
+
 		if err != nil{
 			ui.Say(fmt.Sprintf("image deos not exist %v",err))
 		}
-
 	}
+	//image exists in harvester checksum provided url provided but checksums differ
 	
 	req := client.ImagesAPI.CreateNamespacedVirtualMachineImage(auth, namespace)
 	req = req.HarvesterhciIoV1beta1VirtualMachineImage(*img)
