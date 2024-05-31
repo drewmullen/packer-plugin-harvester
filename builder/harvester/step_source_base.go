@@ -78,30 +78,22 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 		Spec: spec,
 	}
 	
-	
+	tempImg,errCheckSum:=checkImageExists(client,auth,displayName,namespace)
 	if url != "" && checkSum != ""{
-		tempimg,err:=checkImageExists(client,auth,displayName,namespace)
-
-		if err != nil{
+		if errCheckSum != nil{
 			ui.Say(fmt.Sprintf("image with %v does not exist",sourceName))
 		}
 		
-		if checkSum != *tempimg.Spec.Checksum{
+		if checkSum != *tempImg.Spec.Checksum{
 			ui.Say(fmt.Sprintf("image with %v already exists and with a different check sum",sourceName))
 		}
 	}else if url != "" && checkSum == ""{
-		tempimg,err:=checkImageExists(client,auth,displayName,namespace)
-		tempimg=tempimg
-
-		if err == nil{
-			ui.Say(fmt.Sprintf("image already exists"))
+		if errCheckSum == nil{
+			ui.Say(fmt.Sprintf("image already exists %v",errCheckSum))
 		}
 	}else if url == ""{
-		tempimg,err:=checkImageExists(client,auth,sourceName,namespace)
-		tempimg=tempimg
-
-		if err != nil{
-			ui.Say(fmt.Sprintf("image deos not exist %v",err))
+		if errCheckSum != nil{
+			ui.Say(fmt.Sprintf("image deos not exist %v",errCheckSum))
 		}
 	}
 	//image exists in harvester checksum provided url provided but checksums differ
