@@ -40,7 +40,7 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 	timeout := 2 * time.Minute
 	namespace := c.HarvesterNamespace
 	url := c.BuilderSource.URL
-	checkSum := c.BuilderSource.Checksum 
+	checkSum := c.BuilderSource.Checksum
 	ostype := c.BuilderSource.OSType
 	sourceName := c.BuilderSource.Name
 	var displayName string
@@ -77,27 +77,27 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 		},
 		Spec: spec,
 	}
-	
-	tempImg,errCheckSum:=checkImageExists(client,auth,displayName,namespace)
-	if url != "" && checkSum != ""{
-		if errCheckSum != nil{
-			ui.Say(fmt.Sprintf("image with %v does not exist",sourceName))
+
+	tempImg, errCheckSum := checkImageExists(client, auth, displayName, namespace)
+	if url != "" && checkSum != "" {
+		if errCheckSum != nil {
+			ui.Say(fmt.Sprintf("image with %v does not exist", sourceName))
 		}
-		
-		if checkSum != *tempImg.Spec.Checksum{
-			ui.Say(fmt.Sprintf("image with %v already exists and with a different check sum",sourceName))
+
+		if checkSum != *tempImg.Spec.Checksum {
+			ui.Say(fmt.Sprintf("image with %v already exists and with a different check sum", sourceName))
 		}
-	}else if url != "" && checkSum == ""{
-		if errCheckSum == nil{
-			ui.Say(fmt.Sprintf("image already exists %v",errCheckSum))
+	} else if url != "" && checkSum == "" {
+		if errCheckSum == nil {
+			ui.Say(fmt.Sprintf("image already exists %v", errCheckSum))
 		}
-	}else if url == ""{
-		if errCheckSum != nil{
-			ui.Say(fmt.Sprintf("image deos not exist %v",errCheckSum))
+	} else if url == "" {
+		if errCheckSum != nil {
+			ui.Say(fmt.Sprintf("image deos not exist %v", errCheckSum))
 		}
 	}
 	//image exists in harvester checksum provided url provided but checksums differ
-	
+
 	req := client.ImagesAPI.CreateNamespacedVirtualMachineImage(auth, namespace)
 	req = req.HarvesterhciIoV1beta1VirtualMachineImage(*img)
 	_, _, err := client.ImagesAPI.CreateNamespacedVirtualMachineImageExecute(req)
@@ -121,16 +121,16 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 	return multistep.ActionContinue
 }
 
+//
 
-
-func checkImageExists(client *harvester.APIClient,auth context.Context,displayName string,namespace string) (harvester.HarvesterhciIoV1beta1VirtualMachineImage, error) {
-	test:=client.ImagesAPI.ReadNamespacedVirtualMachineImage(auth,displayName,namespace)
-	tempimg,_,err:=client.ImagesAPI.ReadNamespacedVirtualMachineImageExecute(test)
-
-	return *tempimg,err
+func checkImageExists(client *harvester.APIClient, auth context.Context, displayName string, namespace string) (harvester.HarvesterhciIoV1beta1VirtualMachineImage, error) {
+	test := client.ImagesAPI.ReadNamespacedVirtualMachineImage(auth, displayName, namespace)
+	tempimg, _, err := client.ImagesAPI.ReadNamespacedVirtualMachineImageExecute(test)
+	if err != nil {
+		return harvester.HarvesterhciIoV1beta1VirtualMachineImage{}, err
+	}
+	return *tempimg, err
 }
-
-
 
 // Cleanup can be used to clean up any artifact created by the step.
 // A step's clean up always run at the end of a build, regardless of whether provisioning succeeds or fails.

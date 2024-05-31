@@ -15,8 +15,27 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/acctest"
 )
 
-//go:embed test-fixtures/template.pkr.hcl
-var testBuilderHCL2Basic string
+const testBuilderHCL2Basic = `
+source "harvester" "foo" {
+	builder_source {
+	  name    = "drewbuntu"
+	  url     = "http://cloud-images.ubuntu.com/releases/focal/release/ubuntu-20.04-server-cloudimg-amd64.img"
+	  os_type = "ubuntu"
+	  checksum = "02cb10fb8aacc83a2765cb84f76f4a922895ffd8342cd077ed676b0315eaee4e515fec812ac99912d66e95fb977dbbbb402127cd22d344941e8b296e9ed87100"
+	}
+  
+	builder_configuration {
+	 name_prefix = "drew-" 
+	}
+  
+	builder_target {}
+  }
+  build {
+	sources = [
+	  "source.harvester.foo",
+	]
+  }
+  `
 
 // Run with: PACKER_ACC=1 go test -count 1 -v ./builder/harvester/builder_acc_test.go  -timeout=120m
 func TestAccHarvesterBuilder(t *testing.T) {
