@@ -12,6 +12,7 @@ import (
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
 
 	harvester "github.com/drewmullen/harvester-go-sdk"
+	//"os"
 )
 
 // This is a definition of a builder step and should implement multistep.Step
@@ -77,11 +78,17 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 		},
 		Spec: spec,
 	}
-
+	
 	tempImg, errCheckSum := checkImageExists(client, auth, displayName, namespace)
+	//ui.Say(fmt.Sprintf("image with %v already exists and with a different check sum", tempImg.Spec.Url))
+	if(tempImg==harvester.HarvesterhciIoV1beta1VirtualMachineImage{}){
+		ui.Say(fmt.Sprintf("image is not initialized %v does not exist", errCheckSum))
+	}
 	if url != "" && checkSum != "" {
-		if errCheckSum != nil {
+		if errCheckSum != nil || *tempImg.Spec.Checksum=="" {
+			//full exit if error was returned
 			ui.Say(fmt.Sprintf("image with %v does not exist", sourceName))
+			//os.Exit(1)
 		}
 
 		if checkSum != *tempImg.Spec.Checksum {
@@ -93,7 +100,8 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 		}
 	} else if url == "" {
 		if errCheckSum != nil {
-			ui.Say(fmt.Sprintf("image deos not exist %v", errCheckSum))
+			ui.Say(fmt.Sprintf("image does not exist %v", errCheckSum))
+			//os.Exit(1)
 		}
 	}
 	//image exists in harvester checksum provided url provided but checksums differ
@@ -126,7 +134,11 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 func checkImageExists(client *harvester.APIClient, auth context.Context, displayName string, namespace string) (harvester.HarvesterhciIoV1beta1VirtualMachineImage, error) {
 	test := client.ImagesAPI.ReadNamespacedVirtualMachineImage(auth, displayName, namespace)
 	tempimg, _, err := client.ImagesAPI.ReadNamespacedVirtualMachineImageExecute(test)
+	
 	if err != nil {
+		return harvester.HarvesterhciIoV1beta1VirtualMachineImage{}, err
+	}
+	if tempimg==nil{
 		return harvester.HarvesterhciIoV1beta1VirtualMachineImage{}, err
 	}
 	return *tempimg, err

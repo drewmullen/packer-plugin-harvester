@@ -17,6 +17,11 @@ import (
 
 const testBuilderHCL2Basic = `
 source "harvester" "foo" {
+
+	harvester_url="https://rancher.danquack.dev/k8s/clusters/c-m-84qqjh2s"
+	harvester_token="token-sqqf5:x72vh9wr8pzpjmbstcwpwsmk87hlqb6dqzft28nsb72ztlsphgwdlw"
+	harvester_namespace="drew"
+	
 	builder_source {
 	  name    = "drewbuntu"
 	  url     = "http://cloud-images.ubuntu.com/releases/focal/release/ubuntu-20.04-server-cloudimg-amd64.img"
@@ -25,7 +30,8 @@ source "harvester" "foo" {
 	}
   
 	builder_configuration {
-	 name_prefix = "drew-" 
+	 name_prefix = "drew-"
+	 namespace= "drew"
 	}
   
 	builder_target {}
