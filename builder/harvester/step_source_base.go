@@ -12,7 +12,7 @@ import (
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
 
 	harvester "github.com/drewmullen/harvester-go-sdk"
-	//"os"
+	"os"
 )
 
 // This is a definition of a builder step and should implement multistep.Step
@@ -36,7 +36,7 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 	//test := client.VirtualMachinesAPI.ReadNamespacedVirtualMachineInstance(auth, "test", c.HarvesterNamespace)
 	//_, resp, err := test.Execute()
 	//how would i do this
-
+	
 	desiredState := int32(100)
 	timeout := 2 * time.Minute
 	namespace := c.HarvesterNamespace
@@ -82,13 +82,13 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 	tempImg, errCheckSum := checkImageExists(client, auth, displayName, namespace)
 	//ui.Say(fmt.Sprintf("image with %v already exists and with a different check sum", tempImg.Spec.Url))
 	if(tempImg==harvester.HarvesterhciIoV1beta1VirtualMachineImage{}){
-		ui.Say(fmt.Sprintf("image is not initialized %v does not exist", errCheckSum))
+		ui.Say(fmt.Sprintf("image is not initialized %v", errCheckSum))
 	}
 	if url != "" && checkSum != "" {
 		if errCheckSum != nil || *tempImg.Spec.Checksum=="" {
 			//full exit if error was returned
-			ui.Say(fmt.Sprintf("image with %v does not exist", sourceName))
-			//os.Exit(1)
+			ui.Say(fmt.Sprintf("image with name %v does not exist", sourceName))
+			os.Exit(1)
 		}
 
 		if checkSum != *tempImg.Spec.Checksum {
@@ -98,10 +98,10 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 		if errCheckSum == nil {
 			ui.Say(fmt.Sprintf("image already exists %v", errCheckSum))
 		}
-	} else if url == "" {
+	} else if url == "" && checkSum==""{
 		if errCheckSum != nil {
 			ui.Say(fmt.Sprintf("image does not exist %v", errCheckSum))
-			//os.Exit(1)
+			os.Exit(1)
 		}
 	}
 	//image exists in harvester checksum provided url provided but checksums differ
