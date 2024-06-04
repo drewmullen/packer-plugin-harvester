@@ -85,22 +85,39 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 		ui.Say(fmt.Sprintf("image is not initialized %v", errCheckSum))
 	}
 	if url != "" && checkSum != "" {
+		ui.Say("in if 1")
 		if errCheckSum != nil || *tempImg.Spec.Checksum=="" {
 			//full exit if error was returned
 			ui.Say(fmt.Sprintf("image with name %v does not exist", sourceName))
+			ui.Say("exiting program...")
 			os.Exit(1)
 		}
 
 		if checkSum != *tempImg.Spec.Checksum {
 			ui.Say(fmt.Sprintf("image with %v already exists and with a different check sum", sourceName))
+			os.Exit(1)
 		}
 	} else if url != "" && checkSum == "" {
-		if errCheckSum == nil {
-			ui.Say(fmt.Sprintf("image already exists %v", errCheckSum))
-		}
-	} else if url == "" && checkSum==""{
+		ui.Say("in if 2")
+		
 		if errCheckSum != nil {
+			ui.Say(fmt.Sprintf("image already exists %v", errCheckSum))
+			ui.Say("exiting program...")
+			os.Exit(1)
+		}
+	}else if url =="" && checkSum!=""{
+		ui.Say("in if 3")
+		ui.Say("has no url but has checksum")
+		if errCheckSum == nil {
 			ui.Say(fmt.Sprintf("image does not exist %v", errCheckSum))
+			ui.Say("exiting program...")
+			os.Exit(1)
+		}
+	}else if url == "" && checkSum==""{
+		ui.Say("No url and no check sum search by name")
+		if errCheckSum == nil {
+			ui.Say(fmt.Sprintf("image does not exist %v", errCheckSum))
+			ui.Say("exiting program...")
 			os.Exit(1)
 		}
 	}
