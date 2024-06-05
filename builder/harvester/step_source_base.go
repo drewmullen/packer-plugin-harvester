@@ -83,6 +83,7 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 	//ui.Say(fmt.Sprintf("image with %v already exists and with a different check sum", tempImg.Spec.Url))
 	if(tempImg==harvester.HarvesterhciIoV1beta1VirtualMachineImage{}){
 		ui.Say(fmt.Sprintf("image is not initialized %v", errCheckSum))
+		os.Exit(1)
 	}
 	if url != "" && checkSum != "" {
 		ui.Say("in if 1")
@@ -99,27 +100,31 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 		}
 	} else if url != "" && checkSum == "" {
 		ui.Say("in if 2")
-		
+		//if image exists there is no error returned  so if error==nil image exists
 		if errCheckSum != nil {
 			ui.Say(fmt.Sprintf("image already exists %v", errCheckSum))
 			ui.Say("exiting program...")
 			os.Exit(1)
 		}
 	}else if url =="" && checkSum!=""{
+		//should have this error out
 		ui.Say("in if 3")
 		ui.Say("has no url but has checksum")
-		if errCheckSum == nil {
+		if errCheckSum != nil {
 			ui.Say(fmt.Sprintf("image does not exist %v", errCheckSum))
 			ui.Say("exiting program...")
 			os.Exit(1)
 		}
+		os.Exit(1)
 	}else if url == "" && checkSum==""{
-		ui.Say("No url and no check sum search by name")
-		if errCheckSum == nil {
+		//should have this error out
+		ui.Say("No url and no check sum")
+		if errCheckSum != nil {
 			ui.Say(fmt.Sprintf("image does not exist %v", errCheckSum))
 			ui.Say("exiting program...")
 			os.Exit(1)
 		}
+		os.Exit(1)
 	}
 	//image exists in harvester checksum provided url provided but checksums differ
 
