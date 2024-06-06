@@ -80,13 +80,13 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 	}
 	
 	tempImg, errCheckSum := checkImageExists(client, auth, displayName, namespace)
-	//ui.Say(fmt.Sprintf("image with %v already exists and with a different check sum", tempImg.Spec.Url))
 	if(tempImg==harvester.HarvesterhciIoV1beta1VirtualMachineImage{}){
 		ui.Say(fmt.Sprintf("image is not initialized %v", errCheckSum))
 		os.Exit(1)
 	}
+
+	//getting 409 
 	if url != "" && checkSum != "" {
-		ui.Say("in if 1")
 		if errCheckSum != nil || *tempImg.Spec.Checksum=="" {
 			//full exit if error was returned
 			ui.Say(fmt.Sprintf("image with name %v does not exist", sourceName))
@@ -99,7 +99,6 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 			os.Exit(1)
 		}
 	} else if url != "" && checkSum == "" {
-		ui.Say("in if 2")
 		//if image exists there is no error returned  so if error==nil image exists
 		if errCheckSum != nil {
 			ui.Say(fmt.Sprintf("image already exists %v", errCheckSum))
@@ -108,8 +107,7 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 		}
 	}else if url =="" && checkSum!=""{
 		//should have this error out
-		ui.Say("in if 3")
-		ui.Say("has no url but has checksum")
+		ui.Say("has no url but has checksum. provide url to download image")
 		if errCheckSum != nil {
 			ui.Say(fmt.Sprintf("image does not exist %v", errCheckSum))
 			ui.Say("exiting program...")
@@ -118,7 +116,7 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 		os.Exit(1)
 	}else if url == "" && checkSum==""{
 		//should have this error out
-		ui.Say("No url and no check sum")
+		ui.Say("No url and no check sum. provide url and checksum to download image")
 		if errCheckSum != nil {
 			ui.Say(fmt.Sprintf("image does not exist %v", errCheckSum))
 			ui.Say("exiting program...")
@@ -126,8 +124,7 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 		}
 		os.Exit(1)
 	}
-	//image exists in harvester checksum provided url provided but checksums differ
-
+	
 	req := client.ImagesAPI.CreateNamespacedVirtualMachineImage(auth, namespace)
 	req = req.HarvesterhciIoV1beta1VirtualMachineImage(*img)
 	_, _, err := client.ImagesAPI.CreateNamespacedVirtualMachineImageExecute(req)

@@ -51,6 +51,7 @@ source "harvester" "foo" {
 	]
   }
   `
+  
 const test2=`
 source "harvester" "foo" {
 
