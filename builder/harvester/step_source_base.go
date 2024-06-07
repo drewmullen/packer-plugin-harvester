@@ -50,7 +50,7 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 	} else {
 		displayName = c.BuilderSource.DisplayName
 	}
-
+	
 	annotations := map[string]string{
 		"harvesterhci.io/storageClassName": "harvester-longhorn",
 	}
@@ -67,6 +67,7 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 	if c.BuilderSource.Checksum != "" {
 		spec.Checksum = &c.BuilderSource.Checksum
 	}
+	
 	img := &harvester.HarvesterhciIoV1beta1VirtualMachineImage{
 		ApiVersion: &ApiVersionHarvesterKey,
 		Kind:       &KindVirtualMachineImage,
@@ -79,16 +80,15 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 		Spec: spec,
 	}
 	
-	tempImg, errCheckSum := checkImageExists(client, auth, displayName, namespace)
+	tempImg, errCheckSum:= checkImageExists(client, auth, displayName, namespace)
+	//check for uninitialized image
 	if(tempImg==harvester.HarvesterhciIoV1beta1VirtualMachineImage{}){
 		ui.Say(fmt.Sprintf("image is not initialized %v", errCheckSum))
 		os.Exit(1)
 	}
 
-	//getting 409 
 	if url != "" && checkSum != "" {
 		if errCheckSum != nil || *tempImg.Spec.Checksum=="" {
-			//full exit if error was returned
 			ui.Say(fmt.Sprintf("image with name %v does not exist", sourceName))
 			ui.Say("exiting program...")
 			os.Exit(1)
@@ -98,13 +98,14 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 			ui.Say(fmt.Sprintf("image with %v already exists and with a different check sum", sourceName))
 			os.Exit(1)
 		}
+
 	} else if url != "" && checkSum == "" {
-		//if image exists there is no error returned  so if error==nil image exists
 		if errCheckSum != nil {
 			ui.Say(fmt.Sprintf("image already exists %v", errCheckSum))
 			ui.Say("exiting program...")
 			os.Exit(1)
 		}
+
 	}else if url =="" && checkSum!=""{
 		//should have this error out
 		ui.Say("has no url but has checksum. provide url to download image")
@@ -114,6 +115,7 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 			os.Exit(1)
 		}
 		os.Exit(1)
+
 	}else if url == "" && checkSum==""{
 		//should have this error out
 		ui.Say("No url and no check sum. provide url and checksum to download image")
@@ -125,10 +127,13 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 		os.Exit(1)
 	}
 	
+	// this is where 409 error is coming from vm still gets created just wont create a new image since we used a pulled down image
+	// question is do we want to create when we pull down? this can still fire and everything else works 
+	// just wont create the image if we pull one down instead of full creation from scratch
 	req := client.ImagesAPI.CreateNamespacedVirtualMachineImage(auth, namespace)
 	req = req.HarvesterhciIoV1beta1VirtualMachineImage(*img)
 	_, _, err := client.ImagesAPI.CreateNamespacedVirtualMachineImageExecute(req)
-
+	
 	if err != nil {
 		ui.Say(fmt.Sprintf("Error creating image: %v", err))
 	}

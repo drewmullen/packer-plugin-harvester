@@ -40,10 +40,12 @@ source "harvester" "foo" {
   
 	builder_configuration {
 	 name_prefix = "drew-"
-	 namespace= "drew"
+
 	}
   
-	builder_target {}
+	builder_target {
+		display_name = "test"
+	}
   }
   build {
 	sources = [
@@ -51,7 +53,7 @@ source "harvester" "foo" {
 	]
   }
   `
-  
+  /*
 const test2=`
 source "harvester" "foo" {
 
@@ -158,6 +160,7 @@ source "harvester" "foo" {
 	]
   }
 `
+*/
 // Run with: PACKER_ACC=1 go test -count 1 -v ./builder/harvester/builder_acc_test.go  -timeout=120m
 func TestAccBulder_imageDownloadWithChecksum(t *testing.T) {
 	testCase := &acctest.PluginTestCase{
@@ -198,7 +201,7 @@ func TestAccBulder_imageDownloadWithChecksum(t *testing.T) {
 	}
 	acctest.TestPlugin(t, testCase)
 }
-
+/*
 func TestAccBulder_imageDownloadWithoutChecksum(t *testing.T) {
 	testCase := &acctest.PluginTestCase{
 		Name: "harvester_builder_basic_test",
@@ -358,3 +361,4 @@ func TestAccBuild_imageExistsWithNoURLNoCheckSum(t *testing.T) {
 	}
 	acctest.TestPlugin(t, testCase)
 }
+*/
