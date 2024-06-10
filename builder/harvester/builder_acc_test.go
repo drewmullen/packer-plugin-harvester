@@ -53,7 +53,7 @@ source "harvester" "foo" {
 	]
   }
   `
-  /*
+
 const test2=`
 source "harvester" "foo" {
 
@@ -61,8 +61,9 @@ source "harvester" "foo" {
 	harvester_token="token-sqqf5:x72vh9wr8pzpjmbstcwpwsmk87hlqb6dqzft28nsb72ztlsphgwdlw"
 	harvester_namespace="drew"
 	
+	
 	builder_source {
-	  name    = "drewbuntu"
+	  name    = "testCreate"
 	  url     = "http://cloud-images.ubuntu.com/releases/focal/release/ubuntu-20.04-server-cloudimg-amd64.img"
 	  os_type = "ubuntu"
 	}
@@ -80,6 +81,7 @@ source "harvester" "foo" {
 	]
   }
 `
+/*
 //no url but checksum this exits
 const test3=`
 source "harvester" "foo" {
@@ -201,7 +203,7 @@ func TestAccBulder_imageDownloadWithChecksum(t *testing.T) {
 	}
 	acctest.TestPlugin(t, testCase)
 }
-/*
+
 func TestAccBulder_imageDownloadWithoutChecksum(t *testing.T) {
 	testCase := &acctest.PluginTestCase{
 		Name: "harvester_builder_basic_test",
@@ -241,7 +243,7 @@ func TestAccBulder_imageDownloadWithoutChecksum(t *testing.T) {
 	}
 	acctest.TestPlugin(t, testCase)
 }
-
+/*
 func TestAccBuild_imageExistsNoDownload(t *testing.T) {
 	testCase := &acctest.PluginTestCase{
 		Name: "harvester_builder_basic_test",
