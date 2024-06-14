@@ -10,3 +10,4 @@ docs.zip
 .vscode
 packer_log*
 .env
+.DS_Store
