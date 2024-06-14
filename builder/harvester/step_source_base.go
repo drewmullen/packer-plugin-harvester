@@ -27,15 +27,6 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 	ui := state.Get("ui").(packersdk.Ui)
 	c := state.Get("config").(*Config)
 
-	// if download & checksum, checkImageExists() -> checkImageChecksum()
-	// if download & !checksum, checkImageExists()
-	// 	 exists: err
-	// 	 !exists: downloadImage()
-	// if !download, checkImageExists()
-	//test := client.VirtualMachinesAPI.ReadNamespacedVirtualMachineInstance(auth, "test", c.HarvesterNamespace)
-	//_, resp, err := test.Execute()
-	//how would i do this
-
 	desiredState := int32(100)
 	timeout := 2 * time.Minute
 	namespace := c.HarvesterNamespace
@@ -96,38 +87,37 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 	preExistingImg, err := checkImageExists(client, auth, displayName, namespace)
 	//check for uninitialized image
 	if err != nil {
-		ui.Error(fmt.Sprintf("ERROR: image does not exist %v", err))
-	}
+		//TODO: if error is image does not exist then output info and continue, else error and halt
 
-	if (preExistingImg == harvester.HarvesterhciIoV1beta1VirtualMachineImage{}) {
-		if url != "" {
-			//download image
-			ui.Say(fmt.Sprintf("image does not exist, attempting to create image"))
-		} else {
-			ui.Error(fmt.Sprintf("ERROR: image does not exist and no download url provided"))
-			return multistep.ActionHalt
+		if (preExistingImg == harvester.HarvesterhciIoV1beta1VirtualMachineImage{}) {
+			if url != "" {
+				//download image
+				ui.Say("INFO: image does not exist. continuing... ")
+			} else {
+				ui.Error("ERROR: image does not exist and no download url provided")
+				return multistep.ActionHalt
+			}
+
 		}
-
 	} else {
-
 		if url != "" && checkSum != "" {
-			if err != nil || *preExistingImg.Spec.Checksum == "" {
-				ui.Error(fmt.Sprintf("ERROR: checksum not provided"))
+			if *preExistingImg.Spec.Checksum == "" {
+				ui.Error(fmt.Sprintf("ERROR: checksum not set for pre-existing image %s. Unable to compare images.", displayName))
 				return multistep.ActionHalt
 			}
 
 			if checkSum != *preExistingImg.Spec.Checksum {
-				ui.Error(fmt.Sprintf("ERROR: checksums do not match"))
+				ui.Error("ERROR: Image checksums do not match. either erase prior image or rename new image.")
 				return multistep.ActionHalt
 			}
-			ui.Say(fmt.Sprintf("image already exists and checksums match. skipping dowload"))
+			ui.Say("INFO: image already exists and checksums match. skipping download")
 			return multistep.ActionContinue
 
 		} else if url != "" && checkSum == "" {
-			ui.Error(fmt.Sprintf("ERROR: no checksum provided"))
+			ui.Error(fmt.Sprintf("ERROR: image with matching name, %s, already exists and no checksum provided. unable to compare checksums. either provide a checksum or change the name of the image to be unique", displayName))
 			return multistep.ActionHalt
 		} else if url == "" {
-			ui.Say(fmt.Sprintf("image already exists skipping dowload"))
+			ui.Say("INFO: image already exists skipping download")
 			return multistep.ActionContinue
 		}
 
@@ -135,10 +125,11 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 
 	req := client.ImagesAPI.CreateNamespacedVirtualMachineImage(auth, namespace)
 	req = req.HarvesterhciIoV1beta1VirtualMachineImage(*img)
-	_, _, err = client.ImagesAPI.CreateNamespacedVirtualMachineImageExecute(req)
+	_, resp, err := client.ImagesAPI.CreateNamespacedVirtualMachineImageExecute(req)
 
 	if err != nil {
-		ui.Say(fmt.Sprintf("Error creating image: %v", err))
+		ui.Error(fmt.Sprintf("Error creating image: %v \n %v", err, resp))
+		return multistep.ActionHalt
 	}
 
 	ui.Say(fmt.Sprintf("Beginning download of image %v...", sourceName))
@@ -146,7 +137,6 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 
 	if err != nil {
 		err := fmt.Errorf("error waiting for image, %v, to finish downloading %s%%: %v", sourceName, string(desiredState), err)
-		state.Put("error", err)
 		ui.Error(err.Error())
 		return multistep.ActionHalt
 	}

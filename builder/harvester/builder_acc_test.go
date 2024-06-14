@@ -24,28 +24,24 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/acctest"
 )
 
-// test1. url is provided, checksum is provided image exists. test currently in use
-const test1 = `
+// testBuilderAccBasic_imageChecksum. url is provided, checksum is provided image exists. test currently in use
+
+const testBuilderAccBasic_imageChecksum = `
 source "harvester" "foo" {
 
-	harvester_url="https://rancher.danquack.dev/k8s/clusters/c-m-mnff6d8p"
-	harvester_token="token-sqqf5:x72vh9wr8pzpjmbstcwpwsmk87hlqb6dqzft28nsb72ztlsphgwdlw"
-	harvester_namespace="drew"
-	
 	builder_source {
-	  name    = "drewbuntu"
-	  url     = "http://cloud-images.ubuntu.com/releases/focal/release/ubuntu-20.04-server-cloudimg-amd64.img"
-	  os_type = "ubuntu"
-	  checksum = "02cb10fb8aacc83a2765cb84f76f4a922895ffd8342cd077ed676b0315eaee4e515fec812ac99912d66e95fb977dbbbb402127cd22d344941e8b296e9ed87100"
+		name    = "drewbuntu"
+		url     = "http://cloud-images.ubuntu.com/releases/focal/release/ubuntu-20.04-server-cloudimg-amd64.img"
+		os_type = "ubuntu"
+		checksum = "02cb10fb8aacc83a2765cb84f76f4a922895ffd8342cd077ed676b0315eaee4e515fec812ac99912d66e95fb977dbbbb402127cd22d344941e8b296e9ed87100"
 	}
-  
+
 	builder_configuration {
 	 name_prefix = "drew-"
 
 	}
-  
+
 	builder_target {
-		display_name = "test"
 	}
   }
   build {
@@ -54,17 +50,13 @@ source "harvester" "foo" {
 	]
   }
   `
-// test2. url is provided, checksum is not provided image does not exist attempt create. test currently in use
-const test2=`
+
+// testBuilderAccBasic_imageNoChecksum. url is provided, checksum is not provided image does not exist attempt create. test currently in use
+const testBuilderAccBasic_NoChecksumImageFail = `
 source "harvester" "foo" {
 
-	harvester_url="https://rancher.danquack.dev/k8s/clusters/c-m-mnff6d8p"
-	harvester_token="token-sqqf5:x72vh9wr8pzpjmbstcwpwsmk87hlqb6dqzft28nsb72ztlsphgwdlw"
-	harvester_namespace="drew"
-	
-	
 	builder_source {
-	  name    = "testCreate"
+	  name    = "testcreate"
 	  url     = "http://cloud-images.ubuntu.com/releases/focal/release/ubuntu-20.04-server-cloudimg-amd64.img"
 	  os_type = "ubuntu"
 	}
@@ -84,24 +76,22 @@ source "harvester" "foo" {
 `
 
 // test3. url is not provided, checksum is not provided image exists. test not in use
-/*
-const test3=`
+
+const testBuilderAccBasic_noChecksumNoUrlImage=`
 source "harvester" "foo" {
 
-	harvester_url="https://rancher.danquack.dev/k8s/clusters/c-m-mnff6d8p"
-	harvester_token="token-sqqf5:x72vh9wr8pzpjmbstcwpwsmk87hlqb6dqzft28nsb72ztlsphgwdlw"
-	harvester_namespace="drew"
 	
+
 	builder_source {
 	  name    = "drewbuntu"
 	  os_type = "ubuntu"
 	}
-  
+
 	builder_configuration {
 	 name_prefix = "drew-"
 	 namespace= "drew"
 	}
-  
+
 	builder_target {}
   }
   build {
@@ -111,26 +101,22 @@ source "harvester" "foo" {
   }
 `
 
-// test4. image with same name already exists in harvester, checksum is provided, url is provided but checksums are the same.test not in use
+// test4. image with same name already exists in harvester, checksum is provided, url is provided but checksums are not the same. test not in use
 const test4=`
 source "harvester" "foo" {
 
-	harvester_url="https://rancher.danquack.dev/k8s/clusters/c-m-mnff6d8p"
-	harvester_token="token-sqqf5:x72vh9wr8pzpjmbstcwpwsmk87hlqb6dqzft28nsb72ztlsphgwdlw"
-	harvester_namespace="drew"
-	
 	builder_source {
 		name    = "drewbuntu"
 		url     = "http://cloud-images.ubuntu.com/releases/focal/release/ubuntu-20.04-server-cloudimg-amd64.img"
 		os_type = "ubuntu"
 		checksum = "02cb10fb8aacc83a2765cb84f76f4a922895ffd8342cd077ed676b0315eaee4e515fe12ac9912d66e95fb977dbbbb402127cd22d344941e8b296e9ed87100"
 	}
-  
+
 	builder_configuration {
 	 name_prefix = "drew-"
 	 namespace= "drew"
 	}
-  
+
 	builder_target {}
   }
   build {
@@ -142,22 +128,17 @@ source "harvester" "foo" {
 // test5. url provided no checksum image exists. test not in use
 const test5=`
 source "harvester" "foo" {
-
-	harvester_url="https://rancher.danquack.dev/k8s/clusters/c-m-mnff6d8p"
-	harvester_token="token-sqqf5:x72vh9wr8pzpjmbstcwpwsmk87hlqb6dqzft28nsb72ztlsphgwdlw"
-	harvester_namespace="drew"
-	
 	builder_source {
 		url     = "http://cloud-images.ubuntu.com/releases/focal/release/ubuntu-20.04-server-cloudimg-amd64.img"
-		name    = "drewbuntu"	
+		name    = "drewbuntu"
 		os_type = "ubuntu"
 	}
-  
+
 	builder_configuration {
 	 name_prefix = "drew-"
 	 namespace= "drew"
 	}
-  
+
 	builder_target {}
   }
   build {
@@ -166,10 +147,11 @@ source "harvester" "foo" {
 	]
   }
 `
-*/
+
 // Run with: PACKER_ACC=1 go test -count 1 -v ./builder/harvester/builder_acc_test.go  -timeout=120m
 
-// test1. url is provided, checksum is provided image exists. test currently in use
+// testBuilderAccBasic_imageChecksum. url is provided, checksum is provided image exists. test currently in use
+
 func TestAccBulder_imageDownloadWithChecksum(t *testing.T) {
 	testCase := &acctest.PluginTestCase{
 		Name: "harvester_builder_basic_test",
@@ -179,8 +161,8 @@ func TestAccBulder_imageDownloadWithChecksum(t *testing.T) {
 		Teardown: func() error {
 			return nil
 		},
-		Template: test1,
-		Type:     "harvester-img",
+		Template: testBuilderAccBasic_imageChecksum,
+		Type:     "harvester",
 		Check: func(buildCommand *exec.Cmd, logfile string) error {
 			if buildCommand.ProcessState != nil {
 				if buildCommand.ProcessState.ExitCode() != 0 {
@@ -200,7 +182,7 @@ func TestAccBulder_imageDownloadWithChecksum(t *testing.T) {
 			}
 			logsString := string(logsBytes)
 
-			buildGeneratedDataLog := "harvester-img.basic-example: build generated data: mock-build-data"
+			buildGeneratedDataLog := "harvester.basic-example: build generated data: mock-build-data"
 			if matched, _ := regexp.MatchString(buildGeneratedDataLog+".*", logsString); !matched {
 				t.Fatalf("logs doesn't contain expected foo value %q", logsString)
 			}
@@ -210,7 +192,8 @@ func TestAccBulder_imageDownloadWithChecksum(t *testing.T) {
 	acctest.TestPlugin(t, testCase)
 }
 
-// test2. url is provided, checksum is not provided image does not exist attempt create. test currently in use
+
+// testBuilderAccBasic_imageNoChecksum. url is provided, checksum is not provided image does not exist attempt create. test currently in use
 func TestAccBulder_imageDownloadWithoutChecksum(t *testing.T) {
 	testCase := &acctest.PluginTestCase{
 		Name: "harvester_builder_basic_test",
@@ -220,8 +203,8 @@ func TestAccBulder_imageDownloadWithoutChecksum(t *testing.T) {
 		Teardown: func() error {
 			return nil
 		},
-		Template: test2,
-		Type:     "harvester-img",
+		Template: testBuilderAccBasic_NoChecksumImageFail,
+		Type:     "harvester",
 		Check: func(buildCommand *exec.Cmd, logfile string) error {
 			if buildCommand.ProcessState != nil {
 				if buildCommand.ProcessState.ExitCode() != 0 {
@@ -241,7 +224,7 @@ func TestAccBulder_imageDownloadWithoutChecksum(t *testing.T) {
 			}
 			logsString := string(logsBytes)
 
-			buildGeneratedDataLog := "harvester-img.basic-example: build generated data: mock-build-data"
+			buildGeneratedDataLog := "harvester.basic-example: build generated data: mock-build-data"
 			if matched, _ := regexp.MatchString(buildGeneratedDataLog+".*", logsString); !matched {
 				t.Fatalf("logs doesn't contain expected foo value %q", logsString)
 			}
@@ -252,7 +235,7 @@ func TestAccBulder_imageDownloadWithoutChecksum(t *testing.T) {
 }
 
 //test3. url is not provided, checksum is not provided image exists. test not in use
-/*
+
 func TestAccBuild_imageExistsNoDownload(t *testing.T) {
 	testCase := &acctest.PluginTestCase{
 		Name: "harvester_builder_basic_test",
@@ -262,8 +245,8 @@ func TestAccBuild_imageExistsNoDownload(t *testing.T) {
 		Teardown: func() error {
 			return nil
 		},
-		Template: test3,
-		Type:     "harvester-img",
+		Template:  testBuilderAccBasic_noChecksumNoUrlImage,
+		Type:     "harvester",
 		Check: func(buildCommand *exec.Cmd, logfile string) error {
 			if buildCommand.ProcessState != nil {
 				if buildCommand.ProcessState.ExitCode() != 0 {
@@ -283,7 +266,7 @@ func TestAccBuild_imageExistsNoDownload(t *testing.T) {
 			}
 			logsString := string(logsBytes)
 
-			buildGeneratedDataLog := "harvester-img.basic-example: build generated data: mock-build-data"
+			buildGeneratedDataLog := "harvester.basic-example: build generated data: mock-build-data"
 			if matched, _ := regexp.MatchString(buildGeneratedDataLog+".*", logsString); !matched {
 				t.Fatalf("logs doesn't contain expected foo value %q", logsString)
 			}
@@ -293,7 +276,7 @@ func TestAccBuild_imageExistsNoDownload(t *testing.T) {
 	acctest.TestPlugin(t, testCase)
 }
 
-test4. image with same name already exists in harvester, checksum is provided, url is provided but checksums differ.test not in use
+// test4. image with same name already exists in harvester, checksum is provided, url is provided but checksums differ.test not in use
 func TestAccBuild_imageExistsWithDifferentChecksum(t *testing.T) {
 	testCase := &acctest.PluginTestCase{
 		Name: "harvester_builder_basic_test",
@@ -304,7 +287,7 @@ func TestAccBuild_imageExistsWithDifferentChecksum(t *testing.T) {
 			return nil
 		},
 		Template: test4,
-		Type:     "harvester-img",
+		Type:     "harvester",
 		Check: func(buildCommand *exec.Cmd, logfile string) error {
 			if buildCommand.ProcessState != nil {
 				if buildCommand.ProcessState.ExitCode() != 0 {
@@ -324,7 +307,7 @@ func TestAccBuild_imageExistsWithDifferentChecksum(t *testing.T) {
 			}
 			logsString := string(logsBytes)
 
-			buildGeneratedDataLog := "harvester-img.basic-example: build generated data: mock-build-data"
+			buildGeneratedDataLog := "harvester.basic-example: build generated data: mock-build-data"
 			if matched, _ := regexp.MatchString(buildGeneratedDataLog+".*", logsString); !matched {
 				t.Fatalf("logs doesn't contain expected foo value %q", logsString)
 			}
@@ -334,7 +317,7 @@ func TestAccBuild_imageExistsWithDifferentChecksum(t *testing.T) {
 	acctest.TestPlugin(t, testCase)
 }
 
-test5. url provided no checksum image exists. test not in use
+// test5. url provided no checksum image exists. test not in use
 func TestAccBuild_imageExistsWithNoURLNoCheckSum(t *testing.T) {
 	testCase := &acctest.PluginTestCase{
 		Name: "harvester_builder_basic_test",
@@ -345,7 +328,7 @@ func TestAccBuild_imageExistsWithNoURLNoCheckSum(t *testing.T) {
 			return nil
 		},
 		Template: test5,
-		Type:     "harvester-img",
+		Type:     "harvester",
 		Check: func(buildCommand *exec.Cmd, logfile string) error {
 			if buildCommand.ProcessState != nil {
 				if buildCommand.ProcessState.ExitCode() != 0 {
@@ -365,7 +348,7 @@ func TestAccBuild_imageExistsWithNoURLNoCheckSum(t *testing.T) {
 			}
 			logsString := string(logsBytes)
 
-			buildGeneratedDataLog := "harvester-img.basic-example: build generated data: mock-build-data"
+			buildGeneratedDataLog := "harvester.basic-example: build generated data: mock-build-data"
 			if matched, _ := regexp.MatchString(buildGeneratedDataLog+".*", logsString); !matched {
 				t.Fatalf("logs doesn't contain expected foo value %q", logsString)
 			}
@@ -374,4 +357,4 @@ func TestAccBuild_imageExistsWithNoURLNoCheckSum(t *testing.T) {
 	}
 	acctest.TestPlugin(t, testCase)
 }
-*/
+

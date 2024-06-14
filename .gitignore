@@ -8,3 +8,5 @@ dist/*
 .docs/*
 docs.zip
 .vscode
+packer_log*
+.env

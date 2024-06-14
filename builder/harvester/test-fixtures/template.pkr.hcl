@@ -10,7 +10,7 @@ source "harvester" "basic-example" {
 
 build {
   sources = [
-    "source.harvester.basic-example"
+    "source.harvester"
   ]
 
   // provisioner "shell-local" {
