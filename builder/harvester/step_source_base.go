@@ -69,29 +69,12 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 		},
 		Spec: spec,
 	}
-	/*
-			Image doesnt exist:
-		if download = :+1: download
-		if no download = :x: return multistep.ActionHalt
-		Image exists:
-		if download url ->
-		new checksum provided
-		matching = return multistep.ActionContinue
-		not matching = error return multistep.ActionHalt
-		if pre-existing has no checksum = error return multistep.ActionHalt
-		no checksum provided
-		error return multistep.ActionHalt
-		no download url
-		Cool, use it: return multistep.ActionContinue
-	*/
+	
 	preExistingImg, err := checkImageExists(client, auth, displayName, namespace)
-	//check for uninitialized image
 	if err != nil {
 		//TODO: if error is image does not exist then output info and continue, else error and halt
-
 		if (preExistingImg == harvester.HarvesterhciIoV1beta1VirtualMachineImage{}) {
 			if url != "" {
-				//download image
 				ui.Say("INFO: image does not exist. continuing... ")
 			} else {
 				ui.Error("ERROR: image does not exist and no download url provided")

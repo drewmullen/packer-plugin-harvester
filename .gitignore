@@ -11,3 +11,4 @@ docs.zip
 packer_log*
 .env
 .DS_Store
+builder/harvester/*.pkr.hcl
