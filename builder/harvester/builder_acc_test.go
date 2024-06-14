@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/acctest"
 )
 
+// test1. url is provided, checksum is provided image exists. test currently in use
 const test1 = `
 source "harvester" "foo" {
 
@@ -53,7 +54,7 @@ source "harvester" "foo" {
 	]
   }
   `
-
+// test2. url is provided, checksum is not provided image does not exist attempt create. test currently in use
 const test2=`
 source "harvester" "foo" {
 
@@ -69,8 +70,8 @@ source "harvester" "foo" {
 	}
   
 	builder_configuration {
-	 name_prefix = "drew-"
-	 namespace= "drew"
+	  namespace = "drew"
+	  name_prefix = "drew-"
 	}
   
 	builder_target {}
@@ -81,8 +82,9 @@ source "harvester" "foo" {
 	]
   }
 `
+
+// test3. url is not provided, checksum is not provided image exists. test not in use
 /*
-//no url but checksum this exits
 const test3=`
 source "harvester" "foo" {
 
@@ -93,7 +95,6 @@ source "harvester" "foo" {
 	builder_source {
 	  name    = "drewbuntu"
 	  os_type = "ubuntu"
-	  checksum = "02cb10fb8aacc83a2765cb84f76f4a922895ffd8342cd077ed676b0315eaee4e515fec812ac99912d66e95fb977dbbbb402127cd22d344941e8b296e9ed87100"
 	}
   
 	builder_configuration {
@@ -109,7 +110,8 @@ source "harvester" "foo" {
 	]
   }
 `
-//diff check sum exit
+
+// test4. image with same name already exists in harvester, checksum is provided, url is provided but checksums are the same.test not in use
 const test4=`
 source "harvester" "foo" {
 
@@ -137,6 +139,7 @@ source "harvester" "foo" {
 	]
   }
 `
+// test5. url provided no checksum image exists. test not in use
 const test5=`
 source "harvester" "foo" {
 
@@ -145,6 +148,7 @@ source "harvester" "foo" {
 	harvester_namespace="drew"
 	
 	builder_source {
+		url     = "http://cloud-images.ubuntu.com/releases/focal/release/ubuntu-20.04-server-cloudimg-amd64.img"
 		name    = "drewbuntu"	
 		os_type = "ubuntu"
 	}
@@ -164,6 +168,8 @@ source "harvester" "foo" {
 `
 */
 // Run with: PACKER_ACC=1 go test -count 1 -v ./builder/harvester/builder_acc_test.go  -timeout=120m
+
+// test1. url is provided, checksum is provided image exists. test currently in use
 func TestAccBulder_imageDownloadWithChecksum(t *testing.T) {
 	testCase := &acctest.PluginTestCase{
 		Name: "harvester_builder_basic_test",
@@ -204,6 +210,7 @@ func TestAccBulder_imageDownloadWithChecksum(t *testing.T) {
 	acctest.TestPlugin(t, testCase)
 }
 
+// test2. url is provided, checksum is not provided image does not exist attempt create. test currently in use
 func TestAccBulder_imageDownloadWithoutChecksum(t *testing.T) {
 	testCase := &acctest.PluginTestCase{
 		Name: "harvester_builder_basic_test",
@@ -243,6 +250,8 @@ func TestAccBulder_imageDownloadWithoutChecksum(t *testing.T) {
 	}
 	acctest.TestPlugin(t, testCase)
 }
+
+//test3. url is not provided, checksum is not provided image exists. test not in use
 /*
 func TestAccBuild_imageExistsNoDownload(t *testing.T) {
 	testCase := &acctest.PluginTestCase{
@@ -284,6 +293,7 @@ func TestAccBuild_imageExistsNoDownload(t *testing.T) {
 	acctest.TestPlugin(t, testCase)
 }
 
+test4. image with same name already exists in harvester, checksum is provided, url is provided but checksums differ.test not in use
 func TestAccBuild_imageExistsWithDifferentChecksum(t *testing.T) {
 	testCase := &acctest.PluginTestCase{
 		Name: "harvester_builder_basic_test",
@@ -324,6 +334,7 @@ func TestAccBuild_imageExistsWithDifferentChecksum(t *testing.T) {
 	acctest.TestPlugin(t, testCase)
 }
 
+test5. url provided no checksum image exists. test not in use
 func TestAccBuild_imageExistsWithNoURLNoCheckSum(t *testing.T) {
 	testCase := &acctest.PluginTestCase{
 		Name: "harvester_builder_basic_test",

@@ -95,36 +95,47 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 	*/
 	preExistingImg, err := checkImageExists(client, auth, displayName, namespace)
 	//check for uninitialized image
+	if err != nil {
+		ui.Error(fmt.Sprintf("ERROR: image does not exist %v", err))
+	}
+
 	if (preExistingImg == harvester.HarvesterhciIoV1beta1VirtualMachineImage{}) {
 		if url != "" {
 			//download image
-			req := client.ImagesAPI.CreateNamespacedVirtualMachineImage(auth, namespace)
-			req = req.HarvesterhciIoV1beta1VirtualMachineImage(*img)
-			_, _, err = client.ImagesAPI.CreateNamespacedVirtualMachineImageExecute(req)
-
+			ui.Say(fmt.Sprintf("image does not exist, attempting to create image"))
 		} else {
+			ui.Error(fmt.Sprintf("ERROR: image does not exist and no download url provided"))
 			return multistep.ActionHalt
 		}
 
 	} else {
 
-		if url != "" && checkSum != ""{
+		if url != "" && checkSum != "" {
 			if err != nil || *preExistingImg.Spec.Checksum == "" {
+				ui.Error(fmt.Sprintf("ERROR: checksum not provided"))
 				return multistep.ActionHalt
 			}
 
 			if checkSum != *preExistingImg.Spec.Checksum {
+				ui.Error(fmt.Sprintf("ERROR: checksums do not match"))
 				return multistep.ActionHalt
 			}
+			ui.Say(fmt.Sprintf("image already exists and checksums match. skipping dowload"))
 			return multistep.ActionContinue
 
 		} else if url != "" && checkSum == "" {
+			ui.Error(fmt.Sprintf("ERROR: no checksum provided"))
 			return multistep.ActionHalt
-		}else if url == "" {
+		} else if url == "" {
+			ui.Say(fmt.Sprintf("image already exists skipping dowload"))
 			return multistep.ActionContinue
 		}
 
 	}
+
+	req := client.ImagesAPI.CreateNamespacedVirtualMachineImage(auth, namespace)
+	req = req.HarvesterhciIoV1beta1VirtualMachineImage(*img)
+	_, _, err = client.ImagesAPI.CreateNamespacedVirtualMachineImageExecute(req)
 
 	if err != nil {
 		ui.Say(fmt.Sprintf("Error creating image: %v", err))
@@ -148,8 +159,8 @@ func (s *StepSourceBase) Run(_ context.Context, state multistep.StateBag) multis
 //
 
 func checkImageExists(client *harvester.APIClient, auth context.Context, displayName string, namespace string) (harvester.HarvesterhciIoV1beta1VirtualMachineImage, error) {
-	test := client.ImagesAPI.ReadNamespacedVirtualMachineImage(auth, displayName, namespace)
-	preExistingImg, _, err := client.ImagesAPI.ReadNamespacedVirtualMachineImageExecute(test)
+	req := client.ImagesAPI.ReadNamespacedVirtualMachineImage(auth, displayName, namespace)
+	preExistingImg, _, err := client.ImagesAPI.ReadNamespacedVirtualMachineImageExecute(req)
 
 	if err != nil {
 		return harvester.HarvesterhciIoV1beta1VirtualMachineImage{}, err
