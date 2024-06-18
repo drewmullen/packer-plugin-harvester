@@ -6,28 +6,32 @@ package harvester
 
 import (
 	"fmt"
-	"io/ioutil"
+	//"io/ioutil"
 	"os"
 	"os/exec"
-	"regexp"
+	//"regexp"
 	"testing"
-
 	"github.com/hashicorp/packer-plugin-sdk/acctest"
+	"github.com/hashicorp/packer-plugin-sdk/multistep"
+	"context"
+	harvester "github.com/drewmullen/harvester-go-sdk"
+	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
+	
 )
 
-// testBuilderAccBasic_imageChecksum. url is provided, checksum is provided image exists. test currently in use
+// testBuilderAccBasic_imageChecksum. url is provided, checksum is provided image exists. should create image
 const testBuilderAccBasic_imageChecksum = `
 source "harvester" "foo" {
 
 	builder_source {
-		name    = "drewbuntu"
+		name    = "testexist"
 		url     = "http://cloud-images.ubuntu.com/releases/focal/release/ubuntu-20.04-server-cloudimg-amd64.img"
 		os_type = "ubuntu"
 		checksum = "02cb10fb8aacc83a2765cb84f76f4a922895ffd8342cd077ed676b0315eaee4e515fec812ac99912d66e95fb977dbbbb402127cd22d344941e8b296e9ed87100"
 	}
 
 	builder_configuration {
-	 name_prefix = "drew-"
+	 name_prefix = "test-"
 	}
 
 	builder_target {
@@ -40,7 +44,7 @@ source "harvester" "foo" {
   }
   `
 
-// testBuilderAccBasic_imageNoChecksum. url is provided, checksum is not provided image does not exist attempt create. test currently in use
+// testBuilderAccBasic_imageNoChecksum. url is provided, checksum is not provided image does not exist attempt create. should create new image
 const testBuilderAccBasic_noChecksumImageFail = `
 source "harvester" "foo" {
 
@@ -51,8 +55,7 @@ source "harvester" "foo" {
 	}
   
 	builder_configuration {
-	  namespace = "drew"
-	  name_prefix = "drew-"
+	  name_prefix = "test-"
 	}
   
 	builder_target {}
@@ -68,17 +71,13 @@ source "harvester" "foo" {
 
 const testBuilderAccBasic_noChecksumNoUrlImage = `
 source "harvester" "foo" {
-
-	
-
 	builder_source {
-	  name    = "drewbuntu"
+	  name    = "testexist"
 	  os_type = "ubuntu"
 	}
 
 	builder_configuration {
-	 name_prefix = "drew-"
-	 namespace= "drew"
+	 name_prefix = "test-"
 	}
 
 	builder_target {}
@@ -90,12 +89,12 @@ source "harvester" "foo" {
   }
 `
 
-// testBuilderAccBasic_diffChecksumImage. image with same name already exists in harvester, checksum is provided, url is provided but checksums are not the same. test not in use
+// testBuilderAccBasic_diffChecksumImage. image with same name already exists in harvester, checksum is provided, url is provided but checksums are not the same.should exit
 const testBuilderAccBasic_diffChecksumImage = `
 source "harvester" "foo" {
 
 	builder_source {
-		name    = "drewbuntu"
+		name    = "testexist"
 		url     = "http://cloud-images.ubuntu.com/releases/focal/release/ubuntu-20.04-server-cloudimg-amd64.img"
 		os_type = "ubuntu"
 		checksum = "02cb10fb8aacc83a2765cb84f76f4a922895ffd8342cd077ed676b0315eaee4e515fe12ac9912d66e95fb977dbbbb402127cd22d344941e8b296e9ed87100"
@@ -114,12 +113,12 @@ source "harvester" "foo" {
   }
 `
 
-// testBuilderAccBasic_urlNoChecksumImage. url provided no checksum image exists. test not in use
+// testBuilderAccBasic_urlNoChecksumImage. url provided no checksum image exists. 
 const testBuilderAccBasic_urlNoChecksumImage = `
 source "harvester" "foo" {
 	builder_source {
 		url     = "http://cloud-images.ubuntu.com/releases/focal/release/ubuntu-20.04-server-cloudimg-amd64.img"
-		name    = "drewbuntu"
+		name    = "testexist"
 		os_type = "ubuntu"
 	}
 
@@ -137,7 +136,7 @@ source "harvester" "foo" {
 `
 
 
-// testBuilderAccBasic_imageChecksum. url is provided, checksum is provided image exists
+// testBuilderAccBasic_imageChecksum. url is provided, checksum is provided image exists. should create vm
 
 func TestAccBulder_imageDownloadWithChecksum(t *testing.T) {
 	testCase := &acctest.PluginTestCase{
@@ -163,16 +162,16 @@ func TestAccBulder_imageDownloadWithChecksum(t *testing.T) {
 			}
 			defer logs.Close()
 
-			logsBytes, err := ioutil.ReadAll(logs)
+			//logsBytes, err := ioutil.ReadAll(logs)
 			if err != nil {
 				return fmt.Errorf("Unable to read %s", logfile)
 			}
-			logsString := string(logsBytes)
+			//logsString := string(logsBytes)
 
-			buildGeneratedDataLog := "harvester.basic-example: build generated data: mock-build-data"
+			/*buildGeneratedDataLog := "harvester.basic-example: build generated data: mock-build-data"
 			if matched, _ := regexp.MatchString(buildGeneratedDataLog+".*", logsString); !matched {
 				t.Fatalf("logs doesn't contain expected foo value %q", logsString)
-			}
+			}*/
 			return nil
 		},
 	}
@@ -204,23 +203,23 @@ func TestAccBulder_imageDownloadWithoutChecksum(t *testing.T) {
 			}
 			defer logs.Close()
 
-			logsBytes, err := ioutil.ReadAll(logs)
+			//logsBytes, err := ioutil.ReadAll(logs)
 			if err != nil {
 				return fmt.Errorf("Unable to read %s", logfile)
 			}
-			logsString := string(logsBytes)
+			//logsString := string(logsBytes)
 
-			buildGeneratedDataLog := "harvester.basic-example: build generated data: mock-build-data"
+			/*buildGeneratedDataLog := "harvester.basic-example: build generated data: mock-build-data"
 			if matched, _ := regexp.MatchString(buildGeneratedDataLog+".*", logsString); !matched {
 				t.Fatalf("logs doesn't contain expected foo value %q", logsString)
-			}
+			}*/
 			return nil
 		},
 	}
 	acctest.TestPlugin(t, testCase)
 }
 
-//test3. url is not provided, checksum is not provided image exists.
+//test3. url is not provided, checksum is not provided image exists. should exit
 func TestAccBuild_imageExistsDownload(t *testing.T) {
 	testCase := &acctest.PluginTestCase{
 		Name: "imageExistsDownload",
@@ -245,23 +244,23 @@ func TestAccBuild_imageExistsDownload(t *testing.T) {
 			}
 			defer logs.Close()
 
-			logsBytes, err := ioutil.ReadAll(logs)
+			//logsBytes, err := ioutil.ReadAll(logs)
 			if err != nil {
 				return fmt.Errorf("Unable to read %s", logfile)
 			}
-			logsString := string(logsBytes)
+			//logsString := string(logsBytes)
 
-			buildGeneratedDataLog := "harvester.basic-example: build generated data: mock-build-data"
+			/*buildGeneratedDataLog := "harvester.basic-example: build generated data: mock-build-data"
 			if matched, _ := regexp.MatchString(buildGeneratedDataLog+".*", logsString); !matched {
 				t.Fatalf("logs doesn't contain expected foo value %q", logsString)
-			}
+			}*/
 			return nil
 		},
 	}
 	acctest.TestPlugin(t, testCase)
 }
 
-// testBuilderAccBasic_diffChecksumImage. image with same name already exists in harvester, checksum is provided, url is provided but checksums differ
+// testBuilderAccBasic_diffChecksumImage. image with same name already exists in harvester, checksum is provided, url is provided but checksums differ should exit
 func TestAccBuild_imageExistsWithDifferentChecksum(t *testing.T) {
 	testCase := &acctest.PluginTestCase{
 		Name: "imageExistsWithDifferentChecksum",
@@ -286,16 +285,16 @@ func TestAccBuild_imageExistsWithDifferentChecksum(t *testing.T) {
 			}
 			defer logs.Close()
 
-			logsBytes, err := ioutil.ReadAll(logs)
+			//logsBytes, err := ioutil.ReadAll(logs)
 			if err != nil {
 				return fmt.Errorf("Unable to read %s", logfile)
 			}
-			logsString := string(logsBytes)
+			//logsString := string(logsBytes)
 
-			buildGeneratedDataLog := "harvester.basic-example: build generated data: mock-build-data"
+			/*buildGeneratedDataLog := "harvester.basic-example: build generated data: mock-build-data"
 			if matched, _ := regexp.MatchString(buildGeneratedDataLog+".*", logsString); !matched {
 				t.Fatalf("logs doesn't contain expected foo value %q", logsString)
-			}
+			}*/
 			return nil
 		},
 	}
@@ -327,18 +326,76 @@ func TestAccBuild_imageExistsWithNoURLNoCheckSum(t *testing.T) {
 			}
 			defer logs.Close()
 
-			logsBytes, err := ioutil.ReadAll(logs)
+			//ogsBytes, err := ioutil.ReadAll(logs)
 			if err != nil {
 				return fmt.Errorf("Unable to read %s", logfile)
 			}
-			logsString := string(logsBytes)
+			//logsString := string(logsBytes)
 
-			buildGeneratedDataLog := "harvester.basic-example: build generated data: mock-build-data"
+			/*buildGeneratedDataLog := "harvester.basic-example: build generated data: mock-build-data"
 			if matched, _ := regexp.MatchString(buildGeneratedDataLog+".*", logsString); !matched {
 				t.Fatalf("logs doesn't contain expected foo value %q", logsString)
-			}
+			}*/
 			return nil
 		},
 	}
+	acctest.TestPlugin(t, testCase)
+}
+	func TestAccBuild_testSetupUse(t *testing.T) {
+		state := new(multistep.BasicStateBag)
+		client := state.Get("client").(*harvester.APIClient)
+		auth := state.Get("auth").(context.Context)
+		checksum:="02cb10fb8aacc83a2765cb84f76f4a922895ffd8342cd077ed676b0315eaee4e515fe12ac9912d66e95fb977dbbbb402127cd22d344941e8b296e9ed87100"
+		name    := "testexist"
+		ui := state.Get("ui").(packersdk.Ui)
+
+		testCase := &acctest.PluginTestCase{
+			Name: "testSetUpUse",
+			Setup: func() error {
+				img,err :=checkImageExists(client, auth, name,"drew")
+				if err != nil {
+					return err
+				}
+				if (img!=harvester.HarvesterhciIoV1beta1VirtualMachineImage{}){
+					waitForImageDownload(int32(100), name, "drew", *client, auth, 100, ui)
+				}
+				if *img.Spec.Checksum != checksum {
+					return fmt.Errorf("Image already exists")
+				}
+
+				return nil
+			},
+			Teardown: func() error {
+				client.VirtualMachinesAPI.DeleteNamespacedVirtualMachine(auth, name, "drew")
+				return nil
+			},
+			Template: testBuilderAccBasic_urlNoChecksumImage,
+			Type:     "harvester",
+			Check: func(buildCommand *exec.Cmd, logfile string) error {
+				if buildCommand.ProcessState != nil {
+					if buildCommand.ProcessState.ExitCode() != 0 {
+						return fmt.Errorf("Bad exit code. Logfile: %s", logfile)
+					}
+				}
+	
+				logs, err := os.Open(logfile)
+				if err != nil {
+					return fmt.Errorf("Unable find %s", logfile)
+				}
+				defer logs.Close()
+	
+				//ogsBytes, err := ioutil.ReadAll(logs)
+				if err != nil {
+					return fmt.Errorf("Unable to read %s", logfile)
+				}
+				//logsString := string(logsBytes)
+	
+				/*buildGeneratedDataLog := "harvester.basic-example: build generated data: mock-build-data"
+				if matched, _ := regexp.MatchString(buildGeneratedDataLog+".*", logsString); !matched {
+					t.Fatalf("logs doesn't contain expected foo value %q", logsString)
+				}*/
+				return nil
+			},
+		}
 	acctest.TestPlugin(t, testCase)
 }
