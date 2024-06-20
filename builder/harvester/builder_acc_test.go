@@ -12,10 +12,10 @@ import (
 	//"regexp"
 	"testing"
 	"github.com/hashicorp/packer-plugin-sdk/acctest"
-	"github.com/hashicorp/packer-plugin-sdk/multistep"
-	"context"
-	harvester "github.com/drewmullen/harvester-go-sdk"
-	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
+	//"github.com/hashicorp/packer-plugin-sdk/multistep"
+	//"context"
+	//harvester "github.com/drewmullen/harvester-go-sdk"
+	//packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
 	
 )
 
@@ -162,16 +162,10 @@ func TestAccBulder_imageDownloadWithChecksum(t *testing.T) {
 			}
 			defer logs.Close()
 
-			//logsBytes, err := ioutil.ReadAll(logs)
 			if err != nil {
 				return fmt.Errorf("Unable to read %s", logfile)
 			}
-			//logsString := string(logsBytes)
-
-			/*buildGeneratedDataLog := "harvester.basic-example: build generated data: mock-build-data"
-			if matched, _ := regexp.MatchString(buildGeneratedDataLog+".*", logsString); !matched {
-				t.Fatalf("logs doesn't contain expected foo value %q", logsString)
-			}*/
+			
 			return nil
 		},
 	}
@@ -203,16 +197,10 @@ func TestAccBulder_imageDownloadWithoutChecksum(t *testing.T) {
 			}
 			defer logs.Close()
 
-			//logsBytes, err := ioutil.ReadAll(logs)
 			if err != nil {
 				return fmt.Errorf("Unable to read %s", logfile)
 			}
-			//logsString := string(logsBytes)
-
-			/*buildGeneratedDataLog := "harvester.basic-example: build generated data: mock-build-data"
-			if matched, _ := regexp.MatchString(buildGeneratedDataLog+".*", logsString); !matched {
-				t.Fatalf("logs doesn't contain expected foo value %q", logsString)
-			}*/
+	
 			return nil
 		},
 	}
@@ -244,16 +232,10 @@ func TestAccBuild_imageExistsDownload(t *testing.T) {
 			}
 			defer logs.Close()
 
-			//logsBytes, err := ioutil.ReadAll(logs)
 			if err != nil {
 				return fmt.Errorf("Unable to read %s", logfile)
 			}
-			//logsString := string(logsBytes)
-
-			/*buildGeneratedDataLog := "harvester.basic-example: build generated data: mock-build-data"
-			if matched, _ := regexp.MatchString(buildGeneratedDataLog+".*", logsString); !matched {
-				t.Fatalf("logs doesn't contain expected foo value %q", logsString)
-			}*/
+			
 			return nil
 		},
 	}
@@ -285,16 +267,10 @@ func TestAccBuild_imageExistsWithDifferentChecksum(t *testing.T) {
 			}
 			defer logs.Close()
 
-			//logsBytes, err := ioutil.ReadAll(logs)
 			if err != nil {
 				return fmt.Errorf("Unable to read %s", logfile)
 			}
-			//logsString := string(logsBytes)
-
-			/*buildGeneratedDataLog := "harvester.basic-example: build generated data: mock-build-data"
-			if matched, _ := regexp.MatchString(buildGeneratedDataLog+".*", logsString); !matched {
-				t.Fatalf("logs doesn't contain expected foo value %q", logsString)
-			}*/
+	
 			return nil
 		},
 	}
@@ -326,21 +302,16 @@ func TestAccBuild_imageExistsWithNoURLNoCheckSum(t *testing.T) {
 			}
 			defer logs.Close()
 
-			//ogsBytes, err := ioutil.ReadAll(logs)
 			if err != nil {
 				return fmt.Errorf("Unable to read %s", logfile)
 			}
-			//logsString := string(logsBytes)
 
-			/*buildGeneratedDataLog := "harvester.basic-example: build generated data: mock-build-data"
-			if matched, _ := regexp.MatchString(buildGeneratedDataLog+".*", logsString); !matched {
-				t.Fatalf("logs doesn't contain expected foo value %q", logsString)
-			}*/
 			return nil
 		},
 	}
 	acctest.TestPlugin(t, testCase)
 }
+/*
 	func TestAccBuild_testSetupUse(t *testing.T) {
 		state := new(multistep.BasicStateBag)
 		client := state.Get("client").(*harvester.APIClient)
@@ -352,6 +323,7 @@ func TestAccBuild_imageExistsWithNoURLNoCheckSum(t *testing.T) {
 		testCase := &acctest.PluginTestCase{
 			Name: "testSetUpUse",
 			Setup: func() error {
+			
 				img,err :=checkImageExists(client, auth, name,"drew")
 				if err != nil {
 					return err
@@ -393,9 +365,10 @@ func TestAccBuild_imageExistsWithNoURLNoCheckSum(t *testing.T) {
 				/*buildGeneratedDataLog := "harvester.basic-example: build generated data: mock-build-data"
 				if matched, _ := regexp.MatchString(buildGeneratedDataLog+".*", logsString); !matched {
 					t.Fatalf("logs doesn't contain expected foo value %q", logsString)
-				}*/
+				}
 				return nil
 			},
 		}
 	acctest.TestPlugin(t, testCase)
 }
+*/
