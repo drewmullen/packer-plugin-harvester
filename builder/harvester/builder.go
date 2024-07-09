@@ -68,9 +68,10 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 
 	// Set the value of the generated data that will become available to provisioners.
 	// To share the data with post-processors, use the StateData in the artifact.
+	/*
 	state.Put("generated_data", map[string]interface{}{
 		"GeneratedMockData": "mock-build-data",
-	})
+	})*/
 
 	// Run!
 	b.runner = commonsteps.NewRunner(steps, b.config.PackerConfig, ui)

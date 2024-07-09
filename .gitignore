@@ -8,3 +8,7 @@ dist/*
 .docs/*
 docs.zip
 .vscode
+packer_log*
+.env
+.DS_Store
+builder/harvester/*.pkr.hcl
