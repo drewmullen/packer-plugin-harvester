@@ -1,5 +1,11 @@
 # Packer Plugin Harvester
 
+__Note: This plugin is not complete yet:__
+
+- Implement artifact export (on hold for https://github.com/harvester/harvester/issues/5781)
+- Implement communicator
+- Implement provisioning
+
 This repository is a template for a Packer multi-component plugin. It is intended as a starting point for creating Packer plugins, containing:
 - A builder ([builder/harvester](builder/harvester))
 - A provisioner ([provisioner/harvester](provisioner/harvester))

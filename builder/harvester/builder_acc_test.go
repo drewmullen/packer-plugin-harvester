@@ -32,6 +32,8 @@ source "harvester" "foo" {
 
 	builder_configuration {
 	 name_prefix = "test-"
+	 network_namespace = "harvester-public"
+	 network = "lab"
 	}
 
 	builder_target {
@@ -56,6 +58,8 @@ source "harvester" "foo" {
   
 	builder_configuration {
 	  name_prefix = "test-"
+	  network_namespace = "harvester-public"
+	  network = "lab"
 	}
   
 	builder_target {}
@@ -78,6 +82,8 @@ source "harvester" "foo" {
 
 	builder_configuration {
 	 name_prefix = "test-"
+	 network_namespace = "harvester-public"
+	 network = "lab"
 	}
 
 	builder_target {}
@@ -102,6 +108,8 @@ source "harvester" "foo" {
 
 	builder_configuration {
 	 name_prefix = "test-"
+	 network_namespace = "harvester-public"
+	 network = "lab"
 	}
 
 	builder_target {}
@@ -124,6 +132,8 @@ source "harvester" "foo" {
 
 	builder_configuration {
 	 name_prefix = "test-"
+	 network_namespace = "harvester-public"
+	 network = "lab"
 	}
 
 	builder_target {}

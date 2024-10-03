@@ -41,6 +41,8 @@ type BuilderConfiguration struct {
 	// default 2Gi
 	Memory string `mapstructure:"memory" required:"false"`
 	// PreventBuilderImageCleanup bool `mapstructure:"prevent_builder_image_cleanup" required:"false"`
+	NetworkNamespace string `mapstructure:"network_namespace"`
+	Network string `mapstructure:"network"`
 }
 
 type BuilderTarget struct {
@@ -91,6 +93,10 @@ func (c *Config) Prepare(raws ...interface{}) (generatedVars []string, err error
 
 	if c.BuilderConfiguration.NamePrefix == "" {
 		c.BuilderConfiguration.NamePrefix = "packer-"
+	}
+
+	if c.BuilderConfiguration.NetworkNamespace == "" {
+		c.BuilderConfiguration.NetworkNamespace = "harvester-public"
 	}
 
 	// Return the placeholder for the generated data that will become available to provisioners and post-processors.

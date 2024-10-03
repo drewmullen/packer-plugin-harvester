@@ -223,7 +223,7 @@ func vmTemplate(c *Config, volName string) *harvester.KubevirtIoApiCoreV1Virtual
 					Networks: []harvester.KubevirtIoApiCoreV1Network{
 						{
 							Multus: &harvester.KubevirtIoApiCoreV1MultusNetwork{
-								NetworkName: "harvester-public/lab",
+								NetworkName: fmt.Sprintf("%s/%s", c.BuilderConfiguration.NetworkNamespace, c.BuilderConfiguration.Network),
 							},
 							Name: "nic-1",
 						},
